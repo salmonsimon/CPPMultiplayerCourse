@@ -28,10 +28,10 @@ public:
 	void FireButtonPressed(bool bPressed);
 
 	UFUNCTION(Server, Reliable)
-	void Server_Fire();
+	void Server_Fire(const FVector_NetQuantize& TraceHitResult);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Fire();
+	void Multicast_Fire(const FVector_NetQuantize& TraceHitResult);
 
 
 protected:
@@ -60,8 +60,6 @@ private:
 	float AimWalkSpeed = 450.f;
 
 	bool bFireButtonPressed;
-
-	FVector HitTarget;
 
 public:
 	FORCEINLINE void SetOwningCharacter(ABlasterCharacter* OwningCharacter) { Character = OwningCharacter; }
