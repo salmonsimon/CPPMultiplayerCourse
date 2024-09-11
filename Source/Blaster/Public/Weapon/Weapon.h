@@ -7,6 +7,13 @@
 
 #include "Weapon.generated.h"
 
+class USkeletalMeshComponent;
+class USphereComponent;
+class UWidgetComponent;
+class UAnimationAsset;
+class ABulletShell;
+class UTexture2D;
+
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
@@ -30,6 +37,21 @@ public:
 
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UTexture2D* CrosshairCenter;
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UTexture2D* CrosshairLeft;
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UTexture2D* CrosshairRight;
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UTexture2D* CrosshairTop;
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UTexture2D* CrosshairBottom;
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,29 +77,46 @@ protected:
 	);
 
 private:
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
-	class USkeletalMeshComponent* WeaponMesh;
-	
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
-	class USphereComponent* PickupArea;
-
-	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon")
-	EWeaponState WeaponState;
 
 	UFUNCTION()
 	void OnRep_WeaponState();
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
-	class UWidgetComponent* PickupWidget;
+	USkeletalMeshComponent* WeaponMesh;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	USphereComponent* PickupArea;
+
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon")
+	EWeaponState WeaponState;
+
+	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	UWidgetComponent* PickupWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon")
-	class UAnimationAsset* FireAnimation;
+	UAnimationAsset* FireAnimation;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class ABulletShell> BulletShellClass;
+	TSubclassOf<ABulletShell> BulletShellClass;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV = 30.f;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed = 20.f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay = .15f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	bool bIsAutomaticWeapon = true;
 
 public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetPickupArea() const { return PickupArea; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE float GetFireDelay() const { return FireDelay; }
+	FORCEINLINE	bool GetIsAutomaticWeapon() const { return bIsAutomaticWeapon; }
 };
