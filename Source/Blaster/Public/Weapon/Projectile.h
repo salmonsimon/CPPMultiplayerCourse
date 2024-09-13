@@ -7,6 +7,13 @@
 
 #include "Projectile.generated.h"
 
+class UBoxComponent;
+class UProjectileMovementComponent;
+class UParticleSystem;
+class UParticleSystemComponent;
+class USoundCue;
+
+
 UCLASS()
 class BLASTER_API AProjectile : public AActor
 {
@@ -24,23 +31,27 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f;
+
 private:
 	UPROPERTY(EditAnywhere)
-	class UBoxComponent* CollisionBox;
+	UBoxComponent* CollisionBox;
 
 	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
+	UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* Tracer;
+	UParticleSystem* Tracer;
 
-	class UParticleSystemComponent* TracerComponent;
+	UPROPERTY()
+	UParticleSystemComponent* TracerComponent;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* ImpactSound;
+	USoundCue* ImpactSound;
 
 public:	
 

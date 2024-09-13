@@ -4,7 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
 #include "BulletShell.generated.h"
+
+class UStaticMeshComponent;
+class USoundCue;
 
 UCLASS()
 class BLASTER_API ABulletShell : public AActor
@@ -24,11 +28,11 @@ protected:
 private:
 
 	UPROPERTY(VisibleAnywhere)
-		class UStaticMeshComponent* BulletShellMesh;
+	UStaticMeshComponent* BulletShellMesh;
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
-		float EjectionImpulse = 10.f;
+	float EjectionImpulse = 10.f;
 
 	UPROPERTY(EditAnywhere)
-		class USoundCue* BulletShellSound;
+	USoundCue* BulletShellSound;
 };

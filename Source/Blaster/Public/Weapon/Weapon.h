@@ -28,8 +28,8 @@ UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	AWeapon();
 
 	virtual void Tick(float DeltaTime) override;
@@ -37,6 +37,8 @@ public:
 
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
+	
+	void Drop();
 
 	UPROPERTY(EditAnywhere, Category = Crosshair)
 	UTexture2D* CrosshairCenter;

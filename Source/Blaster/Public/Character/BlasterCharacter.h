@@ -7,16 +7,24 @@
 #include "InputActionValue.h"
 #include "Enums/TurningInPlace.h"
 #include "Interfaces/InteractWithCrosshairInterface.h"
+#include "TimerManager.h"
+#include "Components/TimelineComponent.h"
 
 #include "BlasterCharacter.generated.h"
 
-class UInputMappingContext;
+class ABlasterPlayerController;
 class UBlasterCharacterInputData;
+class AWeapon;
+class UCombatComponent;
+class ABlasterPlayerState;
+
+class UInputMappingContext;
 class USpringArmComponent;
 class UCameraComponent;
 class UWidgetComponent;
-class AWeapon;
-class UCombatComponent;
+class USoundCue;
+class UParticleSystem;
+class UParticleSystemComponent;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairInterface
@@ -32,14 +40,27 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void PlayFireMontage(bool bIsAiming);
+	void PlayEliminatedMontage();
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastHitReaction();
 
 	virtual void OnRep_ReplicatedMovement() override;
 
+	void Eliminated();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Eliminated();
+
+	virtual void Destroyed() override;
+
 protected:
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	virtual void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	void UpdateHUDHealth();
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -51,7 +72,7 @@ protected:
 	void FireButtonReleased(const FInputActionValue& Value);
 
 	UFUNCTION(Server, Reliable)
-	void ServerEquip();
+	void Server_Equip();
 
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
@@ -67,13 +88,28 @@ protected:
 
 private:
 
+	void PollInit();
+
 	void HidePlayerIfTooClose();
 	void PlayHitReactionMontage();
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
+	UFUNCTION()
+	void OnRep_Health();
+
+	void EliminatedTimerFinished();
+
 	float CalculateSpeed();
+
+	void StartDissolve();
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+
+	UPROPERTY()
+	ABlasterPlayerState* BlasterPlayerState;
 
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	USpringArmComponent* CameraBoom;
@@ -114,6 +150,49 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactionMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* EliminatedMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player State")
+	float Health = 100.f;
+
+	bool bIsEliminated = false;
+
+	UPROPERTY()
+	ABlasterPlayerController* BlasterPlayerController;
+
+	FTimerHandle EliminatedTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	float EliminatedDelay = 3.f;
+
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+
+	FOnTimelineFloat DissolveTrack;
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve;
+
+	UPROPERTY(VisibleAnywhere, Category = Elimination)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
+
+	UPROPERTY(EditAnywhere, Category = Elimination)
+	UMaterialInstance* DissolveMaterialInstance;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* EliminationBotEffect;
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* EliminationBotComponent;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* EliminationBotSound;
+
+
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -127,4 +206,7 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool GetIsEliminated() const { return bIsEliminated; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 };

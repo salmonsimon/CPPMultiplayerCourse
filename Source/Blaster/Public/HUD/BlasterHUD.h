@@ -4,9 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+
 #include "BlasterHUD.generated.h"
 
 class UTexture2D;
+class UUserWidget;
+class UCharacterOverlay;
 
 USTRUCT(BlueprintType)
 struct FHUDPackage
@@ -26,9 +29,6 @@ public:
 	FLinearColor CrosshairColor = FLinearColor::White;
 };
 
-/**
- * 
- */
 UCLASS()
 class BLASTER_API ABlasterHUD : public AHUD
 {
@@ -37,6 +37,17 @@ class BLASTER_API ABlasterHUD : public AHUD
 public:
 
 	virtual void DrawHUD() override;
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	TSubclassOf<UUserWidget> CharacterOverlayClass;
+
+	UPROPERTY()
+	UCharacterOverlay* CharacterOverlay;
+
+protected:
+
+	virtual void BeginPlay() override;
+	void AddCharacterOverlay();
 
 private:
 
