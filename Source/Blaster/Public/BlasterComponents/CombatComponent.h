@@ -58,7 +58,6 @@ private:
 	void StartFireTimer();
 	void FireTimerFinished();
 
-	UPROPERTY()
 	ABlasterCharacter* Character;
 
 	UPROPERTY()

@@ -21,7 +21,7 @@ public:
 	void AddToScore(float ScoreAmount);
 	virtual void OnRep_Score() override;
 
-	void AddToDefeats();
+	void AddToDefeats(int DefeatsAmount);
 
 	UFUNCTION()
 	void OnRep_Defeats();
