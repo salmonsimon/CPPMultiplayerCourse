@@ -62,6 +62,9 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 
+	if (EquippedWeapon)
+		EquippedWeapon->Drop();
+
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 
@@ -71,6 +74,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->ShowPickupWidget(false);
+	EquippedWeapon->SetHUDAmmo();
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
@@ -103,7 +107,7 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 void UCombatComponent::Fire()
 {
-	if (!bCanFire) return;
+	if (!CanFire()) return;
 
 	bCanFire = false;
 
@@ -296,4 +300,13 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		else
 			HUDPackage.CrosshairColor = FLinearColor::White;
 	}
+}
+
+bool UCombatComponent::CanFire()
+{
+	if (EquippedWeapon == nullptr)
+		return false;
+
+	return !EquippedWeapon->IsEmpty() ||
+		   !bCanFire;
 }

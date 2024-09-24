@@ -11,8 +11,12 @@ class USkeletalMeshComponent;
 class USphereComponent;
 class UWidgetComponent;
 class UAnimationAsset;
-class ABulletShell;
 class UTexture2D;
+
+class ABlasterCharacter;
+class ABlasterPlayerController;
+class ABulletShell;
+
 
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
@@ -34,9 +38,11 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override;
 
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
+	void SetHUDAmmo();
 	
 	void Drop();
 
@@ -83,6 +89,12 @@ private:
 	UFUNCTION()
 	void OnRep_WeaponState();
 
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	UFUNCTION()
+	void SpendRound();
+
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 	USkeletalMeshComponent* WeaponMesh;
 	
@@ -112,13 +124,29 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bIsAutomaticWeapon = true;
+	
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 CurrentAmmo;
+
+	UPROPERTY(EditAnywhere)
+	int32 MagazineCapacity;
+
+	UPROPERTY()
+	ABlasterCharacter* BlasterOwnerCharacter;
+
+	UPROPERTY()
+	ABlasterPlayerController* BlasterOwnerController;
+		
 
 public:
 	void SetWeaponState(EWeaponState State);
+	bool IsEmpty();
+
 	FORCEINLINE USphereComponent* GetPickupArea() const { return PickupArea; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 	FORCEINLINE	bool GetIsAutomaticWeapon() const { return bIsAutomaticWeapon; }
+
 };

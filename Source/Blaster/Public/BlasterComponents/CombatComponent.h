@@ -58,6 +58,8 @@ private:
 	void StartFireTimer();
 	void FireTimerFinished();
 
+	bool CanFire();
+
 	ABlasterCharacter* Character;
 
 	UPROPERTY()
