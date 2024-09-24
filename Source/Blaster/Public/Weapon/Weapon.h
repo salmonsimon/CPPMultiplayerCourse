@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
+#include "WeaponTypes.h"
+
 #include "Weapon.generated.h"
 
 class USkeletalMeshComponent;
@@ -136,6 +138,9 @@ private:
 
 	UPROPERTY()
 	ABlasterPlayerController* BlasterOwnerController;
+
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
 		
 
 public:
@@ -148,5 +153,6 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 	FORCEINLINE	bool GetIsAutomaticWeapon() const { return bIsAutomaticWeapon; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 
 };
