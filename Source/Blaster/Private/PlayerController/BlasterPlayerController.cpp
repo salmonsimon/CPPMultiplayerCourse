@@ -10,11 +10,18 @@
 #include "HUD/CharacterOverlay.h"
 #include "Character/BlasterCharacter.h"
 
+#include "TimerManager.h"
+
+#include "Net/UnrealNetwork.h"
+
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
+
+	if (IsLocalController())
+		GetWorld()->GetTimerManager().SetTimer(SyncTimesTimerHandle, this, &ABlasterPlayerController::SyncClientServerTimes, TimeSyncFrequency, true, TimeSyncFrequency);
 }
 
 void ABlasterPlayerController::Tick(float DeltaTime)
@@ -22,6 +29,14 @@ void ABlasterPlayerController::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	SetHUDTime();
+}
+
+void ABlasterPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+
+	if (IsLocalController())
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 }
 
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
@@ -134,10 +149,38 @@ void ABlasterPlayerController::SetHUDMatchCountdown(float CountdownTime)
 
 void ABlasterPlayerController::SetHUDTime()
 {
-	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetWorld()->GetTimeSeconds());
+	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
 
 	if (CountdownInt != SecondsLeft)
-		SetHUDMatchCountdown(MatchTime - GetWorld()->GetTimeSeconds());
+		SetHUDMatchCountdown(MatchTime - GetServerTime());
 
 	CountdownInt = SecondsLeft;
+}
+
+float ABlasterPlayerController::GetServerTime()
+{
+	if (HasAuthority())
+		return GetWorld()->GetTimeSeconds();
+	else
+		return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+}
+
+void ABlasterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
+{
+	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
+
+	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
+}
+
+void ABlasterPlayerController::ClientReportServerTime_Implementation(float TimeOfCLientRequest, float TimeServerReceivedClientRequest)
+{
+	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfCLientRequest;
+	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime);
+
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetDeltaSeconds();
+}
+
+void ABlasterPlayerController::SyncClientServerTimes()
+{
+	ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 }
