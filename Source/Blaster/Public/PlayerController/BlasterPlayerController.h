@@ -16,12 +16,17 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 	
 public:
 
+	virtual void Tick(float DeltaTime) override;
+
 	virtual void OnPossess(APawn* InPawn) override;
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDWeaponAmmo(int32 CurrentAmmo);
 	void SetHUDCarriedAmmo(int32 CarriedAmmo);
+	void SetHUDMatchCountdown(float CountdownTime);
+
+	void SetHUDTime();
 
 protected:
 
@@ -31,4 +36,7 @@ private:
 
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
+
+	float MatchTime = 120.f;
+	uint32 CountdownInt = 0;
 };
