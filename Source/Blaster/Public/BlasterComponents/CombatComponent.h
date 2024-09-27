@@ -7,6 +7,7 @@
 
 #include "HUD/BlasterHUD.h"
 #include "Weapon/WeaponTypes.h"
+#include "Enums/CombatState.h"
 
 #include "CombatComponent.generated.h"
 
@@ -33,12 +34,19 @@ public:
 	void FireButtonPressed(bool bPressed);
 
 	void Fire();
+	void Reload();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishedReloading();
 
 	UFUNCTION(Server, Reliable)
 	void Server_Fire(const FVector_NetQuantize& TraceHitResult);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Fire(const FVector_NetQuantize& TraceHitResult);
+
+	UFUNCTION(Server, Reliable)
+	void Server_Reload();
 
 
 protected:
@@ -61,11 +69,19 @@ private:
 	void FireTimerFinished();
 
 	bool CanFire();
+	bool ShouldReloadInsteadOfFiring();
 
 	void InitializeCarriedAmmo();
 
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
+
+	UFUNCTION()
+	void OnRep_CombatState();
+
+	void HandleReload();
+	int32 AmountToReload();
+	void UpdateAmmoValues();
 
 	ABlasterCharacter* Character;
 
@@ -119,11 +135,15 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 45;
 
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
 public:
 	FORCEINLINE void SetOwningCharacter(ABlasterCharacter* OwningCharacter) { Character = OwningCharacter; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() { return EquippedWeapon; }
 	FORCEINLINE FVector GetHitTarget() { return HitTarget; }
 	FORCEINLINE bool IsAiming() { return bIsAiming; }
+	FORCEINLINE ECombatState GetCombatState() { return CombatState; }
 
 	void SetIsAiming(bool IsAiming);
 };

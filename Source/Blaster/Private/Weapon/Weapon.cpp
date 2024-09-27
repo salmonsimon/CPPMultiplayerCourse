@@ -190,6 +190,13 @@ void AWeapon::OnRep_Ammo()
 	SetHUDAmmo();
 }
 
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MagazineCapacity);
+
+	SetHUDAmmo();
+}
+
 void AWeapon::OnRep_Owner()
 {
 	Super::OnRep_Owner();

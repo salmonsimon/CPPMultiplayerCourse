@@ -37,4 +37,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UInputAction* InputFire;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UInputAction* InputReload;
 };

@@ -14,6 +14,7 @@ class USphereComponent;
 class UWidgetComponent;
 class UAnimationAsset;
 class UTexture2D;
+class USoundCue;
 
 class ABlasterCharacter;
 class ABlasterPlayerController;
@@ -47,6 +48,8 @@ public:
 	void SetHUDAmmo();
 	
 	void Drop();
+
+	void AddAmmo(int32 AmmoToAdd);
 
 	UPROPERTY(EditAnywhere, Category = Crosshair)
 	UTexture2D* CrosshairCenter;
@@ -141,6 +144,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* EquipSound;
 		
 
 public:
@@ -154,5 +160,8 @@ public:
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 	FORCEINLINE	bool GetIsAutomaticWeapon() const { return bIsAutomaticWeapon; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetCurrentAmmo() const { return CurrentAmmo; }
+	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
+	FORCEINLINE USoundCue* GetEquipSound() { return EquipSound; }
 
 };
