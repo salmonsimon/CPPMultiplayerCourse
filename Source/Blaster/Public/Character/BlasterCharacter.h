@@ -5,10 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "Enums/TurningInPlace.h"
-#include "Interfaces/InteractWithCrosshairInterface.h"
 #include "TimerManager.h"
 #include "Components/TimelineComponent.h"
+
+#include "Enums/CombatState.h"
+#include "Enums/TurningInPlace.h"
+#include "Interfaces/InteractWithCrosshairInterface.h"
+
 
 #include "BlasterCharacter.generated.h"
 
@@ -40,6 +43,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void PlayFireMontage(bool bIsAiming);
+	void PlayReloadMontage();
 	void PlayEliminatedMontage();
 	
 	UFUNCTION(NetMulticast, Unreliable)
@@ -70,6 +74,7 @@ protected:
 	void AimButtonReleased(const FInputActionValue& Value);
 	void FireButtonPressed(const FInputActionValue& Value);
 	void FireButtonReleased(const FInputActionValue& Value);
+	void Reload(const FInputActionValue& Value);
 
 	UFUNCTION(Server, Reliable)
 	void Server_Equip();
@@ -126,7 +131,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	AWeapon* OverlappingWeapon;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* CombatComponent;
 
 	float AO_Yaw;
@@ -146,6 +151,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ReloadMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactionMontage;
@@ -201,6 +209,8 @@ public:
 
 	AWeapon* GetEquippedWeapon();
 
+	ECombatState GetCombatState();
+
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
@@ -209,4 +219,5 @@ public:
 	FORCEINLINE bool GetIsEliminated() const { return bIsEliminated; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	
 };

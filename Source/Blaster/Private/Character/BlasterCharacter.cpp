@@ -10,6 +10,8 @@
 #include "Input/BlasterCharacterInputData.h"
 #include "GameModes/BlasterGameMode.h"
 #include "PlayerState/BlasterPlayerState.h"
+#include "Weapon/WeaponTypes.h"
+#include "Enums/CombatState.h"
 
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
@@ -138,6 +140,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
     PlayerInput->BindAction(InputActions->InputAim, ETriggerEvent::Completed, this, &ABlasterCharacter::AimButtonReleased);
     PlayerInput->BindAction(InputActions->InputFire, ETriggerEvent::Triggered, this, &ABlasterCharacter::FireButtonPressed);
     PlayerInput->BindAction(InputActions->InputFire, ETriggerEvent::Completed, this, &ABlasterCharacter::FireButtonReleased);
+    PlayerInput->BindAction(InputActions->InputReload, ETriggerEvent::Triggered, this, &ABlasterCharacter::Reload);
 }
 
 void ABlasterCharacter::Tick(float DeltaTime)
@@ -197,6 +200,9 @@ void ABlasterCharacter::Eliminated()
 
 void ABlasterCharacter::Multicast_Eliminated_Implementation()
 {
+    if (BlasterPlayerController)
+        BlasterPlayerController->SetHUDWeaponAmmo(0);
+
     bIsEliminated = true;
 
     PlayEliminatedMontage();
@@ -379,6 +385,28 @@ void ABlasterCharacter::PlayFireMontage(bool bIsAiming)
     }
 }
 
+void ABlasterCharacter::PlayReloadMontage()
+{
+    if (CombatComponent == nullptr || CombatComponent->GetEquippedWeapon() == nullptr) return;
+
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    if (AnimInstance && ReloadMontage)
+    {
+        AnimInstance->Montage_Play(ReloadMontage);
+
+        FName SectionName;
+
+        switch (CombatComponent->GetEquippedWeapon()->GetWeaponType())
+        {
+            case EWeaponType::EWT_AssaultRifle:
+                SectionName = FName("Rifle");
+                break;
+        }
+
+        AnimInstance->Montage_JumpToSection(SectionName);
+    }
+}
+
 void ABlasterCharacter::PlayEliminatedMontage()
 {
     UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -437,6 +465,12 @@ void ABlasterCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
     if (CombatComponent && CombatComponent->GetEquippedWeapon())
         CombatComponent->FireButtonPressed(false);
+}
+
+void ABlasterCharacter::Reload(const FInputActionValue& Value)
+{
+    if (CombatComponent)
+        CombatComponent->Reload();
 }
 
 float ABlasterCharacter::CalculateSpeed()
@@ -613,4 +647,11 @@ FVector ABlasterCharacter::GetHitTarget()
         return FVector();
 
     return CombatComponent->GetHitTarget();
+}
+
+ECombatState ABlasterCharacter::GetCombatState()
+{
+    if (CombatComponent == nullptr) return ECombatState::ECS_MAX;
+
+    return CombatComponent->GetCombatState();
 }
