@@ -36,6 +36,8 @@ class BLASTER_API ABlasterHUD : public AHUD
 	
 public:
 
+	void AddCharacterOverlay();
+
 	virtual void DrawHUD() override;
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
@@ -47,7 +49,6 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
-	void AddCharacterOverlay();
 
 private:
 

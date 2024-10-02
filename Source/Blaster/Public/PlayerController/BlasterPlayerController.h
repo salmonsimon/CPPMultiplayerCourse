@@ -9,17 +9,20 @@
 #include "BlasterPlayerController.generated.h"
 
 class ABlasterHUD;
+class UCharacterOverlay;
 
 UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void ReceivedPlayer() override;
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
@@ -28,11 +31,14 @@ public:
 	void SetHUDCarriedAmmo(int32 CarriedAmmo);
 	void SetHUDMatchCountdown(float CountdownTime);
 
-	virtual void ReceivedPlayer() override;
+
+	void OnMatchStateSet(FName State);
 
 protected:
 
 	virtual void BeginPlay() override;
+
+	void PollInit();
 
 	void SetHUDTime();
 
@@ -48,8 +54,21 @@ private:
 
 	void SyncClientServerTimes();
 
+	UFUNCTION()
+	void OnRep_MatchState();
+
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
+
+	UPROPERTY()
+	UCharacterOverlay* CharacterOverlay;
+
+	bool bInitializeCharacterOverlay = false;
+
+	float HUDHealth;
+	float HUDMaxHealth;
+	int32 HUDScore;
+	int32 HUDDefeats;
 
 	float MatchTime = 120.f;
 	uint32 CountdownInt = 0;
@@ -60,4 +79,7 @@ private:
 	float TimeSyncFrequency = 5.f;
 
 	FTimerHandle SyncTimesTimerHandle;
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
 };
