@@ -8,6 +8,7 @@
 
 #include "HUD/BlasterHUD.h"
 #include "HUD/CharacterOverlay.h"
+#include "HUD/Announcement.h"
 #include "Character/BlasterCharacter.h"
 #include "GameModes/BlasterGameMode.h"
 
@@ -20,6 +21,9 @@ void ABlasterPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
+
+	if (BlasterHUD)
+		BlasterHUD->AddAnnouncement();
 
 	if (IsLocalController())
 		GetWorld()->GetTimerManager().SetTimer(SyncTimesTimerHandle, this, &ABlasterPlayerController::SyncClientServerTimes, TimeSyncFrequency, true, TimeSyncFrequency);
@@ -238,21 +242,24 @@ void ABlasterPlayerController::OnMatchStateSet(FName State)
 	MatchState = State;
 
 	if (MatchState == MatchState::InProgress)
-	{
-		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-
-		if (BlasterHUD)
-			BlasterHUD->AddCharacterOverlay();
-	}
+		HandleMatchHasStarted();
 }
 
 void ABlasterPlayerController::OnRep_MatchState()
 {
 	if (MatchState == MatchState::InProgress)
-	{
-		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+		HandleMatchHasStarted();
+}
 
-		if (BlasterHUD)
-			BlasterHUD->AddCharacterOverlay();
+void ABlasterPlayerController::HandleMatchHasStarted()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	if (BlasterHUD)
+	{
+		BlasterHUD->AddCharacterOverlay();
+
+		if (BlasterHUD->Announcement)
+			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }

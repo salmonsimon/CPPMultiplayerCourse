@@ -57,6 +57,8 @@ private:
 	UFUNCTION()
 	void OnRep_MatchState();
 
+	void HandleMatchHasStarted();
+
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
 
