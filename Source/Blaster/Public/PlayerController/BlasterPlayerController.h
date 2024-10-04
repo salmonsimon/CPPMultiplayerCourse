@@ -10,6 +10,7 @@
 
 class ABlasterHUD;
 class UCharacterOverlay;
+class ABlasterGameMode;
 
 UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController
@@ -30,6 +31,7 @@ public:
 	void SetHUDWeaponAmmo(int32 CurrentAmmo);
 	void SetHUDCarriedAmmo(int32 CarriedAmmo);
 	void SetHUDMatchCountdown(float CountdownTime);
+	void SetHUDAnnouncementCountdown(float CountdownTime);
 
 
 	void OnMatchStateSet(FName State);
@@ -50,6 +52,12 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedClientRequest);
 
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
+
+	UFUNCTION(Client, Reliable)
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Starting);
+
 private:
 
 	void SyncClientServerTimes();
@@ -58,6 +66,9 @@ private:
 	void OnRep_MatchState();
 
 	void HandleMatchHasStarted();
+
+	UPROPERTY()
+	ABlasterGameMode* BlasterGameMode;
 
 	UPROPERTY()
 	ABlasterHUD* BlasterHUD;
@@ -72,7 +83,9 @@ private:
 	int32 HUDScore;
 	int32 HUDDefeats;
 
-	float MatchTime = 120.f;
+	float LevelStartingTime = 0.f;
+	float MatchTime = 0.f;
+	float WarmupTime = 0.f;
 	uint32 CountdownInt = 0;
 
 	float ClientServerDelta = 0;

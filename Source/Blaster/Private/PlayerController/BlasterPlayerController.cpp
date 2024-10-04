@@ -13,6 +13,7 @@
 #include "GameModes/BlasterGameMode.h"
 
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -22,11 +23,10 @@ void ABlasterPlayerController::BeginPlay()
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 
-	if (BlasterHUD)
-		BlasterHUD->AddAnnouncement();
-
 	if (IsLocalController())
 		GetWorld()->GetTimerManager().SetTimer(SyncTimesTimerHandle, this, &ABlasterPlayerController::SyncClientServerTimes, TimeSyncFrequency, true, TimeSyncFrequency);
+
+	ServerCheckMatchState();
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -199,12 +199,63 @@ void ABlasterPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	}
 }
 
+void ABlasterPlayerController::SetHUDAnnouncementCountdown(float CountdownTime)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->Announcement &&
+		BlasterHUD->Announcement->WarmupTime;
+
+	if (bHUDValid)
+	{
+		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
+		int32 Seconds = CountdownTime - (Minutes * 60.f);
+
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+
+		BlasterHUD->Announcement->WarmupTime->SetText(FText::FromString(CountdownText));
+	}
+}
+
 void ABlasterPlayerController::SetHUDTime()
 {
-	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+	float TimeLeft = 0.f;
+
+	if (HasAuthority())
+	{
+		if (BlasterGameMode == nullptr)
+		{
+			BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+
+			if (BlasterGameMode)
+				LevelStartingTime = BlasterGameMode->LevelStartingTime;
+		}
+	}
+	
+	if (MatchState == MatchState::WaitingToStart)
+		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
+	if (MatchState == MatchState::InProgress)
+		TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+
+	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+
+	if (HasAuthority())
+	{
+		BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
+
+		if (BlasterGameMode)
+			SecondsLeft = FMath::CeilToInt(BlasterGameMode->GetCountdownTime() + LevelStartingTime);
+	}
+	
 
 	if (CountdownInt != SecondsLeft)
-		SetHUDMatchCountdown(MatchTime - GetServerTime());
+	{
+		if (MatchState == MatchState::WaitingToStart)
+			SetHUDAnnouncementCountdown(TimeLeft);
+		else if (MatchState == MatchState::InProgress)
+			SetHUDMatchCountdown(TimeLeft);
+	}
 
 	CountdownInt = SecondsLeft;
 }
@@ -229,7 +280,7 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(float TimeO
 	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfCLientRequest;
 	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime);
 
-	ClientServerDelta = CurrentServerTime - GetWorld()->GetDeltaSeconds();
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
 
 void ABlasterPlayerController::SyncClientServerTimes()
@@ -262,4 +313,34 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 		if (BlasterHUD->Announcement)
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Collapsed);
 	}
+}
+
+void ABlasterPlayerController::ServerCheckMatchState_Implementation()
+{
+	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+
+	if (GameMode)
+	{
+		LevelStartingTime = GameMode->LevelStartingTime;
+		WarmupTime = GameMode->WarmupTime;
+		MatchTime = GameMode->MatchTime;
+
+		MatchState = GameMode->GetMatchState();
+
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+	}
+}
+
+void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Starting)
+{
+	MatchState = StateOfMatch;
+	
+	WarmupTime = Warmup;
+	MatchTime = Match;
+	LevelStartingTime = Starting;
+
+	OnMatchStateSet(MatchState);
+
+	if (BlasterHUD && MatchState == MatchState::WaitingToStart)
+		BlasterHUD->AddAnnouncement();
 }
