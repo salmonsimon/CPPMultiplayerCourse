@@ -58,6 +58,11 @@ public:
 
 	virtual void Destroyed() override;
 
+	void FireButtonPressed(const FInputActionValue& Value);
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -72,7 +77,6 @@ protected:
 	void CrouchButtonPressed(const FInputActionValue& Value);
 	void AimButtonPressed(const FInputActionValue& Value);
 	void AimButtonReleased(const FInputActionValue& Value);
-	void FireButtonPressed(const FInputActionValue& Value);
 	void FireButtonReleased(const FInputActionValue& Value);
 	void Reload(const FInputActionValue& Value);
 
@@ -84,6 +88,8 @@ protected:
 	void SimProxiesTurn();
 
 	virtual void Jump() override;
+
+	void RotateInPlace(float DeltaTime);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	UInputMappingContext* InputMapping;
@@ -219,5 +225,7 @@ public:
 	FORCEINLINE bool GetIsEliminated() const { return bIsEliminated; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
-	
+	FORCEINLINE UCombatComponent* GetCombatComponent() { return CombatComponent; }
+	FORCEINLINE bool GetDisableGameplay() { return bDisableGameplay; }
+
 };

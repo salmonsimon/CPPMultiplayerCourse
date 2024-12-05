@@ -5,9 +5,15 @@
 #include "Character/BlasterCharacter.h"
 #include "PlayerController/BlasterPlayerController.h"
 #include "PlayerState/BlasterPlayerState.h"
+#include "GameStates/BlasterGameState.h"
 
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
+
+namespace MatchState
+{
+	const FName Cooldown = FName(TEXT("Cooldown"));
+}
 
 ABlasterGameMode::ABlasterGameMode()
 {
@@ -36,8 +42,15 @@ void ABlasterGameMode::Tick(float DeltaTime)
 	{
 		CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 
-		//if (CountdownTime <= 0.f)
-			//SetMatchState(MatchState::Cooldown);
+		if (CountdownTime <= 0.f)
+			SetMatchState(MatchState::Cooldown);
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+
+		if (CountdownTime <= 0.f)
+			RestartGame();
 	}
 }
 
@@ -59,8 +72,13 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, 
 	ABlasterPlayerState* AttackerPlayerState = AttackerController ? Cast<ABlasterPlayerState>(AttackerController->PlayerState) : nullptr;
 	ABlasterPlayerState* EliminatedPlayerState = EliminatedController ? Cast<ABlasterPlayerState>(EliminatedController->PlayerState) : nullptr;
 
-	if (AttackerPlayerState && AttackerPlayerState != EliminatedPlayerState)
+	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+
+	if (AttackerPlayerState && AttackerPlayerState != EliminatedPlayerState && BlasterGameState)
+	{
 		AttackerPlayerState->AddToScore(1.f);
+		BlasterGameState->UpdateTopScore(AttackerPlayerState);
+	}
 
 	if (EliminatedPlayerState)
 		EliminatedPlayerState->AddToDefeats(1);

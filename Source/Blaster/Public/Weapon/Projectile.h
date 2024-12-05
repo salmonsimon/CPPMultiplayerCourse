@@ -31,12 +31,15 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	virtual void SpawnImpactEffects();
+
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
 
-private:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* CollisionBox;
+
+private:
 
 	UPROPERTY(VisibleAnywhere)
 	UProjectileMovementComponent* ProjectileMovementComponent;
