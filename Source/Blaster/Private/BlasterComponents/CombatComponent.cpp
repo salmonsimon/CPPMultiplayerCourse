@@ -59,6 +59,12 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SMG, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Sniper, StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGranadeLauncherAmmo);
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -279,11 +285,17 @@ void UCombatComponent::UpdateAmmoValues()
 
 void UCombatComponent::SetIsAiming(bool IsAiming)
 {
+	if (Character == nullptr || EquippedWeapon == nullptr)
+		return;
+
 	bIsAiming = IsAiming;
 	ServerSetIsAiming(IsAiming);
 
 	if (Character)
 		Character->GetCharacterMovement()->MaxWalkSpeed = IsAiming ? AimWalkSpeed : BaseWalkSpeed;
+
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Sniper)
+		Character->ShowSniperScopeWidget(bIsAiming);
 }
 
 void UCombatComponent::ServerSetIsAiming_Implementation(bool IsAiming)

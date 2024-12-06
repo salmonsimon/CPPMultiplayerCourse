@@ -20,6 +20,6 @@ public:
 	
 private: 
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	TSubclassOf<class AProjectile> ProjectileClass;
 };

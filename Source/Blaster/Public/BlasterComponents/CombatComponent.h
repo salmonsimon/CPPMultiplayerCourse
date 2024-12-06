@@ -11,8 +11,6 @@
 
 #include "CombatComponent.generated.h"
 
-#define TRACE_LENGTH 80000.f
-
 class AWeapon;
 class ABlasterCharacter;
 class ABlasterPlayerController;
@@ -134,6 +132,24 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 45;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingRocketAmmo = 10;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingPistolAmmo = 10;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingSMGAmmo = 10;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperAmmo = 10;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 10;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingGranadeLauncherAmmo = 10;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
