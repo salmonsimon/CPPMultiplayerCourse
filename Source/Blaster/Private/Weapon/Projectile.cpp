@@ -2,12 +2,20 @@
 
 
 #include "Weapon/Projectile.h"
+
 #include "Components/BoxComponent.h"
+
+#include "Sound/SoundCue.h" 
+
 #include "GameFramework/ProjectileMovementComponent.h"
+
 #include "Kismet/GameplayStatics.h"
+
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
-#include "Sound/SoundCue.h" 
+
 #include "Character/BlasterCharacter.h"
 #include "Blaster/Blaster.h"
 
@@ -29,6 +37,7 @@ AProjectile::AProjectile()
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
+	ProjectileMovementComponent->SetIsReplicated(true);
 }
 
 void AProjectile::BeginPlay()
@@ -53,10 +62,7 @@ void AProjectile::BeginPlay()
 	}
 }
 
-void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-	Destroy();
-}
+
 
 void AProjectile::Tick(float DeltaTime)
 {
@@ -70,6 +76,52 @@ void AProjectile::Destroyed()
 	SpawnImpactEffects();
 }
 
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	Destroy();
+}
+
+void AProjectile::ApplyExplosionDamage()
+{
+	APawn* FiringPawn = GetInstigator();
+	if (FiringPawn && HasAuthority())
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff
+			(
+				this,
+				Damage,
+				MinimumExplosionDamage,
+				GetActorLocation(),
+				DamageInnerRadius,
+				DamageOuterRadius,
+				DamageFalloff,
+				UDamageType::StaticClass(),
+				TArray<AActor*>(),
+				this,
+				FiringController
+			);
+		}
+	}
+}
+
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&AProjectile::DestroyTimerFinished,
+		DestroyTime
+	);
+}
+
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
+}
+
 void AProjectile::SpawnImpactEffects()
 {
 	if (ImpactParticles)
@@ -77,5 +129,21 @@ void AProjectile::SpawnImpactEffects()
 
 	if (ImpactSound)
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+	if (TrailSystem)
+	{
+		TrailNiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			TrailSystem,
+			GetRootComponent(),
+			FName(),
+			GetActorLocation(),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false
+		);
+	}
 }
 

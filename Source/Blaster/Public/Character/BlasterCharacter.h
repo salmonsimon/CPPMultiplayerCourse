@@ -60,6 +60,9 @@ public:
 
 	void FireButtonPressed(const FInputActionValue& Value);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
+
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
 

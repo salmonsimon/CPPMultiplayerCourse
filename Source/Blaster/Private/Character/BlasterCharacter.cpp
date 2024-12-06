@@ -143,7 +143,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
     PlayerInput->BindAction(InputActions->InputJump, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
     PlayerInput->BindAction(InputActions->InputEquip, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
     PlayerInput->BindAction(InputActions->InputCrouch, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchButtonPressed);
-    PlayerInput->BindAction(InputActions->InputAim, ETriggerEvent::Triggered, this, &ABlasterCharacter::AimButtonPressed);
+    PlayerInput->BindAction(InputActions->InputAim, ETriggerEvent::Started, this, &ABlasterCharacter::AimButtonPressed);
     PlayerInput->BindAction(InputActions->InputAim, ETriggerEvent::Completed, this, &ABlasterCharacter::AimButtonReleased);
     PlayerInput->BindAction(InputActions->InputFire, ETriggerEvent::Triggered, this, &ABlasterCharacter::FireButtonPressed);
     PlayerInput->BindAction(InputActions->InputFire, ETriggerEvent::Completed, this, &ABlasterCharacter::FireButtonReleased);
@@ -267,6 +267,13 @@ void ABlasterCharacter::Multicast_Eliminated_Implementation()
             );
         }
     }
+
+    bool bHideSniperScope = IsLocallyControlled() &&
+                            CombatComponent && CombatComponent->IsAiming() &&
+                            CombatComponent->GetEquippedWeapon() && CombatComponent->GetEquippedWeapon()->GetWeaponType() == EWeaponType::EWT_Sniper;
+
+    if (bHideSniperScope)
+        ShowSniperScopeWidget(false);
 }
 
 void ABlasterCharacter::EliminatedTimerFinished()
@@ -429,15 +436,23 @@ void ABlasterCharacter::PlayReloadMontage()
                 break;
 
             case EWeaponType::EWT_RocketLauncher:
-                SectionName = FName("Rifle");
+                SectionName = FName("RocketLauncher");
                 break;
 
             case EWeaponType::EWT_Pistol:
-                SectionName = FName("Rifle");
+                SectionName = FName("Pistol");
                 break;
 
             case EWeaponType::EWT_Shotgun:
-                SectionName = FName("Rifle");
+                SectionName = FName("Shotgun");
+                break;
+
+            case EWeaponType::EWT_Sniper:
+                SectionName = FName("Sniper");
+                break;
+
+            case EWeaponType::EWT_GrenadeLauncher:
+                SectionName = FName("GrenadeLauncher");
                 break;
         }
 

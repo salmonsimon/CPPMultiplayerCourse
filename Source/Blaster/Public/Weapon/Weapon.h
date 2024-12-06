@@ -51,19 +51,21 @@ public:
 
 	void AddAmmo(int32 AmmoToAdd);
 
-	UPROPERTY(EditAnywhere, Category = Crosshair)
+	void EnableCustomDepth(bool bEnable);
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairCenter;
 
-	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairLeft;
 
-	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairRight;
 
-	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairTop;
 
-	UPROPERTY(EditAnywhere, Category = Crosshair)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairBottom;
 
 protected:
@@ -89,6 +91,9 @@ protected:
 		int32 OtherBodyIndex
 	);
 
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
+	UAnimationAsset* FireAnimation;
+
 private:
 
 	UFUNCTION()
@@ -100,40 +105,37 @@ private:
 	UFUNCTION()
 	void SpendRound();
 
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, Category = "Weapon|Main Configuration")
 	USkeletalMeshComponent* WeaponMesh;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, Category = "Weapon|Main Configuration")
 	USphereComponent* PickupArea;
 
-	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon")
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon|Main Configuration")
 	EWeaponState WeaponState;
 
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, Category = "Weapon|Main Configuration")
 	UWidgetComponent* PickupWidget;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon")
-	UAnimationAsset* FireAnimation;
-
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	TSubclassOf<ABulletShell> BulletShellClass;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	float ZoomedFOV = 30.f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	float ZoomInterpSpeed = 20.f;
 
-	UPROPERTY(EditAnywhere, Category = Combat)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	float FireDelay = .15f;
 
-	UPROPERTY(EditAnywhere, Category = Combat)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	bool bIsAutomaticWeapon = true;
 	
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, Category = "Weapon|Combat")
 	int32 CurrentAmmo;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	int32 MagazineCapacity;
 
 	UPROPERTY()
@@ -142,10 +144,10 @@ private:
 	UPROPERTY()
 	ABlasterPlayerController* BlasterOwnerController;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	EWeaponType WeaponType;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	USoundCue* EquipSound;
 		
 
