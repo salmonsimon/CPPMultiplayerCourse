@@ -7,6 +7,7 @@
 #include "Character/BlasterAnimInstance.h"
 #include "Weapon/Weapon.h"
 #include "BlasterComponents/CombatComponent.h"
+#include "BlasterComponents/BuffComponent.h"
 #include "Input/BlasterCharacterInputData.h"
 #include "GameModes/BlasterGameMode.h"
 #include "PlayerState/BlasterPlayerState.h"
@@ -59,6 +60,10 @@ ABlasterCharacter::ABlasterCharacter()
     CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
     CombatComponent->SetIsReplicated(true);
     CombatComponent->SetOwningCharacter(this);
+
+    BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+    BuffComponent->SetIsReplicated(true);
+    BuffComponent->SetOwningCharacter(this);
 
     GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 

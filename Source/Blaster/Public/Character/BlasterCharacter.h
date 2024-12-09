@@ -19,6 +19,7 @@ class ABlasterPlayerController;
 class UBlasterCharacterInputData;
 class AWeapon;
 class UCombatComponent;
+class UBuffComponent;
 class ABlasterPlayerState;
 
 class UInputMappingContext;
@@ -142,6 +143,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* CombatComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	UBuffComponent* BuffComponent;
 
 	float AO_Yaw;
 	float InterpAO_Yaw;
