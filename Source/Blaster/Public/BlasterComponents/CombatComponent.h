@@ -46,6 +46,8 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_Reload();
 
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
+
 
 protected:
 
@@ -150,6 +152,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingGranadeLauncherAmmo = 10;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 300;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
