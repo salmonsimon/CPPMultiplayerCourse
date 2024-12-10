@@ -59,11 +59,9 @@ ABlasterCharacter::ABlasterCharacter()
 
     CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
     CombatComponent->SetIsReplicated(true);
-    CombatComponent->SetOwningCharacter(this);
 
     BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
     BuffComponent->SetIsReplicated(true);
-    BuffComponent->SetOwningCharacter(this);
 
     GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
@@ -90,6 +88,17 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
     DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
     DOREPLIFETIME(ABlasterCharacter, Health);
     DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
+}
+
+void ABlasterCharacter::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    if (CombatComponent)
+        CombatComponent->SetOwningCharacter(this);
+
+    if (BuffComponent)
+        BuffComponent->SetOwningCharacter(this);
 }
 
 void ABlasterCharacter::Destroyed()
@@ -674,10 +683,12 @@ void ABlasterCharacter::Jump()
         Super::Jump();
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
     UpdateHUDHealth();
-    PlayHitReactionMontage();
+
+    if (LastHealth > Health)
+        PlayHitReactionMontage();
 }
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

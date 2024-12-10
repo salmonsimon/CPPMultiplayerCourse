@@ -41,16 +41,16 @@ protected:
 
 private:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Pickup|Configuration")
 	USphereComponent* PickupSphere;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Pickup|Configuration")
 	USoundCue* PickupSound;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Pickup|Configuration")
 	UStaticMeshComponent* PickupMesh;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Pickup|Configuration")
 	float BaseTurnRate = 45.f;
 
 };
