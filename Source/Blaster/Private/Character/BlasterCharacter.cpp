@@ -100,10 +100,13 @@ void ABlasterCharacter::PostInitializeComponents()
     if (BuffComponent)
     {
         BuffComponent->SetOwningCharacter(this);
+
         BuffComponent->SetInitialSpeeds(
             GetCharacterMovement()->MaxWalkSpeed,
             GetCharacterMovement()->MaxWalkSpeedCrouched
         );
+
+        BuffComponent->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
     }
 }
 
