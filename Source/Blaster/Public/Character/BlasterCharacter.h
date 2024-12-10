@@ -66,6 +66,7 @@ public:
 	void ShowSniperScopeWidget(bool bShowScope);
 
 	void UpdateHUDHealth();
+	void UpdateHUDShield();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
@@ -114,6 +115,9 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
+
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
 
 	void EliminatedTimerFinished();
 
@@ -181,6 +185,12 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player State")
 	float Health = 100.f;
 
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player State")
+	float Shield = 100.f;
+
 	bool bIsEliminated = false;
 
 	UPROPERTY()
@@ -232,7 +242,9 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool GetIsEliminated() const { return bIsEliminated; }
 	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
 	FORCEINLINE bool GetDisableGameplay() { return bDisableGameplay; }

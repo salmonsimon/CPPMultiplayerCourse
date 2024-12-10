@@ -87,6 +87,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
     DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
     DOREPLIFETIME(ABlasterCharacter, Health);
+    DOREPLIFETIME(ABlasterCharacter, Shield);
     DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
 
@@ -129,6 +130,7 @@ void ABlasterCharacter::BeginPlay()
 	Super::BeginPlay();
 
     UpdateHUDHealth();
+    UpdateHUDShield();
 
     if (HasAuthority())
         OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
@@ -208,9 +210,24 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-    Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+    if (GetIsEliminated())
+        return;
+
+    float DamageToHealth = Shield > 0.f ? 0.f : Damage;
+
+    if (Shield > 0.f)
+    {
+        float PreviousShield = Shield;
+        Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+
+        if (Shield == 0.f)
+            DamageToHealth = FMath::Clamp(Damage - PreviousShield, 0.f, MaxHealth);
+    }
+
+    Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
 
     UpdateHUDHealth();
+    UpdateHUDShield();
     PlayHitReactionMontage();
 
     if (Health == 0.f)
@@ -330,6 +347,14 @@ void ABlasterCharacter::UpdateHUDHealth()
 
     if (BlasterPlayerController)
         BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+}
+
+void ABlasterCharacter::UpdateHUDShield()
+{
+    BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+
+    if (BlasterPlayerController)
+        BlasterPlayerController->SetHUDShield(Shield, MaxShield);
 }
 
 void ABlasterCharacter::HidePlayerIfTooClose()
@@ -697,6 +722,14 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
     UpdateHUDHealth();
 
     if (LastHealth > Health)
+        PlayHitReactionMontage();
+}
+
+void ABlasterCharacter::OnRep_Shield(float LastShield)
+{
+    UpdateHUDShield();
+
+    if (LastShield > Shield)
         PlayHitReactionMontage();
 }
 
