@@ -5,19 +5,13 @@
 #include "CoreMinimal.h"
 #include "Pickups/Pickup.h"
 
-#include "HealthPickup.generated.h"
-
-class UNiagaraComponent;
-class UNiagaraSystem;
+#include "SpeedPickup.generated.h"
 
 UCLASS()
-class BLASTER_API AHealthPickup : public APickup
+class BLASTER_API ASpeedPickup : public APickup
 {
 	GENERATED_BODY()
 
-public:
-
-	AHealthPickup();
 
 protected:
 
@@ -28,16 +22,16 @@ protected:
 		int32 OtherBodyIndex,
 		bool bFromSweep,
 		const FHitResult& SweepResult
-	) override;
+	);
 
 private:
 
-	UPROPERTY(EditAnywhere, Category = "Pickup|HealBuff")
-	float HealAmount = 100.f;
+	UPROPERTY(EditAnywhere)
+	float BaseSpeedBuff = 1000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Pickup|HealBuff")
-	float HealingTime = 5.f;
+	UPROPERTY(EditAnywhere)
+	float CrouchSpeedBuff = 850.f;
 
-	
-	
+	UPROPERTY(EditAnywhere)
+	float SpeedBuffTime = 15.f;
 };

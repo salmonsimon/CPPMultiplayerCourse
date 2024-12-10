@@ -12,6 +12,9 @@
 
 #include "Sound/SoundCue.h"
 
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+
 APickup::APickup()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -35,6 +38,9 @@ APickup::APickup()
 	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
 	PickupMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true);
+
+	PickupEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PickupEffectComponent"));
+	PickupEffectComponent->SetupAttachment(RootComponent);
 }
 
 void APickup::BeginPlay()
@@ -55,6 +61,16 @@ void APickup::Destroyed()
 			this,
 			PickupSound,
 			GetActorLocation()
+		);
+	}
+
+	if (PickupEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			PickupEffect,
+			GetActorLocation(),
+			GetActorRotation()
 		);
 	}
 }

@@ -5,15 +5,22 @@
 
 #include "Character/BlasterCharacter.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
+
 UBuffComponent::UBuffComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
 void UBuffComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void UBuffComponent::SetInitialSpeeds(float BaseSpeed, float CrouchSpeed)
+{
+	InitialBaseSpeed = BaseSpeed;
+	InitialCrouchSpeed = CrouchSpeed;
 }
 
 void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -53,3 +60,39 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 	Character->UpdateHUDHealth();
 }
 
+void UBuffComponent::BuffSpeed(float BaseSpeed, float CrouchSpeed, float BuffTime)
+{
+	if (Character == nullptr)
+		return;
+
+	Character->GetWorldTimerManager().SetTimer(
+		SpeedBuffTimer,
+		this,
+		&UBuffComponent::ResetSpeeds,
+		BuffTime
+	);
+
+	if (Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
+	}
+}
+
+void UBuffComponent::ResetSpeeds()
+{
+	if (Character == nullptr || Character->GetCharacterMovement() == nullptr)
+		return;
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = InitialBaseSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpeed;
+}
+
+void UBuffComponent::Multicast_SpeedBuff_Implementation(float BaseSpeed, float CrouchSpeed)
+{
+	if (Character == nullptr || Character->GetCharacterMovement() == nullptr)
+		return;
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
+}

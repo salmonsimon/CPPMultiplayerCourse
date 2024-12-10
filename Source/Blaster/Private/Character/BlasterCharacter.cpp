@@ -98,7 +98,13 @@ void ABlasterCharacter::PostInitializeComponents()
         CombatComponent->SetOwningCharacter(this);
 
     if (BuffComponent)
+    {
         BuffComponent->SetOwningCharacter(this);
+        BuffComponent->SetInitialSpeeds(
+            GetCharacterMovement()->MaxWalkSpeed,
+            GetCharacterMovement()->MaxWalkSpeedCrouched
+        );
+    }
 }
 
 void ABlasterCharacter::Destroyed()
