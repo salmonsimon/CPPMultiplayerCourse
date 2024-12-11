@@ -169,7 +169,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
     PlayerInput->BindAction(InputActions->InputMove, ETriggerEvent::Triggered, this, &ABlasterCharacter::Move);
     PlayerInput->BindAction(InputActions->InputLook, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
     PlayerInput->BindAction(InputActions->InputJump, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
-    PlayerInput->BindAction(InputActions->InputEquip, ETriggerEvent::Triggered, this, &ABlasterCharacter::Equip);
+    PlayerInput->BindAction(InputActions->InputEquip, ETriggerEvent::Started, this, &ABlasterCharacter::Equip);
     PlayerInput->BindAction(InputActions->InputCrouch, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchButtonPressed);
     PlayerInput->BindAction(InputActions->InputAim, ETriggerEvent::Started, this, &ABlasterCharacter::AimButtonPressed);
     PlayerInput->BindAction(InputActions->InputAim, ETriggerEvent::Completed, this, &ABlasterCharacter::AimButtonReleased);
@@ -248,13 +248,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 
 void ABlasterCharacter::Eliminated()
 {
-    if (CombatComponent && CombatComponent->GetEquippedWeapon())
-    {
-        if (CombatComponent->GetEquippedWeapon()->GetDestroyOnElimination())
-            CombatComponent->GetEquippedWeapon()->Destroy();
-        else
-            CombatComponent->GetEquippedWeapon()->Drop();
-    }
+    DropOrDestroyWeapons();
 
     Multicast_Eliminated();
 
@@ -264,6 +258,29 @@ void ABlasterCharacter::Eliminated()
         &ABlasterCharacter::EliminatedTimerFinished,
         EliminatedDelay
     );
+}
+
+void ABlasterCharacter::DropOrDestroyWeapons()
+{
+    if (CombatComponent)
+    {
+        if (CombatComponent->GetEquippedWeapon())
+            DropOrDestroyWeapon(CombatComponent->GetEquippedWeapon());
+
+        if (CombatComponent->GetSecondaryWeapon())
+            DropOrDestroyWeapon(CombatComponent->GetSecondaryWeapon());
+    }
+}
+
+void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+    if (Weapon)
+    {
+        if (Weapon->GetDestroyOnElimination())
+            Weapon->Destroy();
+        else
+            Weapon->Drop();
+    }
 }
 
 void ABlasterCharacter::Multicast_Eliminated_Implementation()

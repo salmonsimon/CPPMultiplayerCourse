@@ -131,6 +131,9 @@ private:
 
 	void SpawnDefaultWeapon();
 
+	void DropOrDestroyWeapons();
+	void DropOrDestroyWeapon(AWeapon* Weapon);
+
 	UPROPERTY()
 	ABlasterPlayerState* BlasterPlayerState;
 

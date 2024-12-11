@@ -98,6 +98,11 @@ void AWeapon::SetWeaponState(EWeaponState State)
 	OnWeaponStateSet();
 }
 
+void AWeapon::OnRep_WeaponState()
+{
+	OnWeaponStateSet();
+}
+
 void AWeapon::OnWeaponStateSet()
 {
 	switch (WeaponState)
@@ -119,10 +124,6 @@ void AWeapon::OnWeaponStateSet()
 	}
 }
 
-void AWeapon::OnRep_WeaponState()
-{
-	OnWeaponStateSet();
-}
 
 void AWeapon::OnEquipped()
 {
@@ -159,13 +160,10 @@ void AWeapon::OnEquippedSecondary()
 		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	}
 
-	EnableCustomDepth(true);
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+	WeaponMesh->MarkRenderStateDirty();
 
-	if (WeaponMesh)
-	{
-		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
-		WeaponMesh->MarkRenderStateDirty();
-	}
+	EnableCustomDepth(true);
 }
 
 void AWeapon::OnDropped()
@@ -183,8 +181,6 @@ void AWeapon::OnDropped()
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true);
-
-	ShowPickupWidget(true);
 }
 
 void AWeapon::SetHUDAmmo()
