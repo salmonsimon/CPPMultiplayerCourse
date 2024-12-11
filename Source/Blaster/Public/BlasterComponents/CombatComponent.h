@@ -7,6 +7,7 @@
 
 #include "HUD/BlasterHUD.h"
 #include "Weapon/WeaponTypes.h"
+#include "Weapon/Weapon.h"
 #include "Enums/CombatState.h"
 
 #include "CombatComponent.generated.h"
@@ -165,6 +166,8 @@ public:
 	FORCEINLINE FVector GetHitTarget() { return HitTarget; }
 	FORCEINLINE bool IsAiming() { return bIsAiming; }
 	FORCEINLINE ECombatState GetCombatState() { return CombatState; }
+	FORCEINLINE int32 GetCarriedAmmo() { return CarriedAmmo; }
+	FORCEINLINE int32 GetWeaponAmmo() { return EquippedWeapon->GetCurrentAmmo(); }
 
 	void SetIsAiming(bool IsAiming);
 };

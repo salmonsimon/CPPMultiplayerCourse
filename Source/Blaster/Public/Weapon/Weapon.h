@@ -149,6 +149,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	USoundCue* EquipSound;
+
+	bool bDestroyOnElimination = false;
 		
 
 public:
@@ -165,5 +167,7 @@ public:
 	FORCEINLINE int32 GetCurrentAmmo() const { return CurrentAmmo; }
 	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
 	FORCEINLINE USoundCue* GetEquipSound() { return EquipSound; }
+	FORCEINLINE bool GetDestroyOnElimination() { return bDestroyOnElimination; }
+	FORCEINLINE void SetDestroyOnElimination(bool Value) { bDestroyOnElimination = Value; }
 
 };

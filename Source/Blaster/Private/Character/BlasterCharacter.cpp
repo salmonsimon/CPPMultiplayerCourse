@@ -129,6 +129,9 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+    SpawnDefaultWeapon();
+
+    UpdateHUDAmmo();
     UpdateHUDHealth();
     UpdateHUDShield();
 
@@ -246,7 +249,12 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 void ABlasterCharacter::Eliminated()
 {
     if (CombatComponent && CombatComponent->GetEquippedWeapon())
-        CombatComponent->GetEquippedWeapon()->Drop();
+    {
+        if (CombatComponent->GetEquippedWeapon()->GetDestroyOnElimination())
+            CombatComponent->GetEquippedWeapon()->Destroy();
+        else
+            CombatComponent->GetEquippedWeapon()->Drop();
+    }
 
     Multicast_Eliminated();
 
@@ -339,7 +347,22 @@ void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
 {
     if (DynamicDissolveMaterialInstance)
         DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
-} 
+}
+
+void ABlasterCharacter::SpawnDefaultWeapon()
+{
+    ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+    UWorld* World = GetWorld();
+
+    if (BlasterGameMode && World && DefaultWeaponClass && !GetIsEliminated())
+    {
+        AWeapon* DefaultWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+        DefaultWeapon->SetDestroyOnElimination(true);
+
+        if (CombatComponent)
+            CombatComponent->EquipWeapon(DefaultWeapon);
+    }
+}
 
 void ABlasterCharacter::UpdateHUDHealth()
 {
@@ -355,6 +378,17 @@ void ABlasterCharacter::UpdateHUDShield()
 
     if (BlasterPlayerController)
         BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+}
+
+void ABlasterCharacter::UpdateHUDAmmo()
+{
+    BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+
+    if (BlasterPlayerController && CombatComponent && CombatComponent->GetEquippedWeapon())
+    {
+        BlasterPlayerController->SetHUDCarriedAmmo(CombatComponent->GetCarriedAmmo());
+        BlasterPlayerController->SetHUDWeaponAmmo(CombatComponent->GetWeaponAmmo());
+    }
 }
 
 void ABlasterCharacter::HidePlayerIfTooClose()

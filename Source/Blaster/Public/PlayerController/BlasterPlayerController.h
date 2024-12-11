@@ -82,6 +82,8 @@ private:
 	bool bInitializeShield = false;
 	bool bInitializeScore = false;
 	bool bInitializeDefeats = false;
+	bool bInitializeCarriedAmmo = false;
+	bool bInitializeWeaponAmmo = false;
 
 	float HUDHealth;
 	float HUDMaxHealth;
@@ -89,6 +91,8 @@ private:
 	float HUDMaxShield;
 	int32 HUDScore;
 	int32 HUDDefeats;
+	int32 HUDCarriedAmmo;
+	int32 HUDWeaponAmmo;
 
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;
@@ -105,4 +109,5 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
 	FName MatchState;
+
 };

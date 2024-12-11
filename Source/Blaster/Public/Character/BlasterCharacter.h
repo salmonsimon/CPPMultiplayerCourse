@@ -67,6 +67,7 @@ public:
 
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
+	void UpdateHUDAmmo();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
@@ -127,6 +128,8 @@ private:
 
 	UFUNCTION()
 	void UpdateDissolveMaterial(float DissolveValue);
+
+	void SpawnDefaultWeapon();
 
 	UPROPERTY()
 	ABlasterPlayerState* BlasterPlayerState;
@@ -223,6 +226,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* EliminationBotSound;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 
 public:	
