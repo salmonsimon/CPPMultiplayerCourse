@@ -26,6 +26,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void SetHUDHealth(float Health, float MaxHealth);
+	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDWeaponAmmo(int32 CurrentAmmo);
@@ -77,12 +78,21 @@ private:
 	UPROPERTY()
 	UCharacterOverlay* CharacterOverlay;
 
-	bool bInitializeCharacterOverlay = false;
+	bool bInitializeHealth = false;
+	bool bInitializeShield = false;
+	bool bInitializeScore = false;
+	bool bInitializeDefeats = false;
+	bool bInitializeCarriedAmmo = false;
+	bool bInitializeWeaponAmmo = false;
 
 	float HUDHealth;
 	float HUDMaxHealth;
+	float HUDShield;
+	float HUDMaxShield;
 	int32 HUDScore;
 	int32 HUDDefeats;
+	int32 HUDCarriedAmmo;
+	int32 HUDWeaponAmmo;
 
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;
@@ -99,4 +109,5 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
 	FName MatchState;
+
 };

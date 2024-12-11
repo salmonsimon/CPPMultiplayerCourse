@@ -7,6 +7,7 @@
 
 #include "HUD/BlasterHUD.h"
 #include "Weapon/WeaponTypes.h"
+#include "Weapon/Weapon.h"
 #include "Enums/CombatState.h"
 
 #include "CombatComponent.generated.h"
@@ -28,6 +29,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+	void SwapWeapons();
 
 	void FireButtonPressed(bool bPressed);
 
@@ -46,6 +48,8 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_Reload();
 
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
+
 
 protected:
 
@@ -55,9 +59,15 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
+
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairs(float DeltaTime);
+
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 
 private:	
 
@@ -81,6 +91,8 @@ private:
 	int32 AmountToReload();
 	void UpdateAmmoValues();
 
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
+
 	ABlasterCharacter* Character;
 
 	UPROPERTY()
@@ -91,6 +103,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool bIsAiming;
@@ -151,15 +166,22 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingGranadeLauncherAmmo = 10;
 
+	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 300;
+
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
 public:
 	FORCEINLINE void SetOwningCharacter(ABlasterCharacter* OwningCharacter) { Character = OwningCharacter; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() { return EquippedWeapon; }
+	FORCEINLINE AWeapon* GetSecondaryWeapon() { return SecondaryWeapon; }
 	FORCEINLINE FVector GetHitTarget() { return HitTarget; }
 	FORCEINLINE bool IsAiming() { return bIsAiming; }
 	FORCEINLINE ECombatState GetCombatState() { return CombatState; }
+	FORCEINLINE int32 GetCarriedAmmo() { return CarriedAmmo; }
+	FORCEINLINE int32 GetWeaponAmmo() { return EquippedWeapon->GetCurrentAmmo(); }
 
 	void SetIsAiming(bool IsAiming);
+	bool ShouldSwapWeapon();
 };

@@ -19,6 +19,7 @@ class ABlasterPlayerController;
 class UBlasterCharacterInputData;
 class AWeapon;
 class UCombatComponent;
+class UBuffComponent;
 class ABlasterPlayerState;
 
 class UInputMappingContext;
@@ -41,6 +42,7 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
 
 	void PlayFireMontage(bool bIsAiming);
 	void PlayReloadMontage();
@@ -63,6 +65,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 
+	void UpdateHUDHealth();
+	void UpdateHUDShield();
+	void UpdateHUDAmmo();
+
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
 
@@ -71,8 +77,6 @@ protected:
 
 	UFUNCTION()
 	virtual void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-
-	void UpdateHUDHealth();
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -111,7 +115,10 @@ private:
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
+
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
 
 	void EliminatedTimerFinished();
 
@@ -121,6 +128,11 @@ private:
 
 	UFUNCTION()
 	void UpdateDissolveMaterial(float DissolveValue);
+
+	void SpawnDefaultWeapon();
+
+	void DropOrDestroyWeapons();
+	void DropOrDestroyWeapon(AWeapon* Weapon);
 
 	UPROPERTY()
 	ABlasterPlayerState* BlasterPlayerState;
@@ -142,6 +154,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* CombatComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	UBuffComponent* BuffComponent;
 
 	float AO_Yaw;
 	float InterpAO_Yaw;
@@ -176,6 +191,12 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player State")
 	float Health = 100.f;
 
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, EditAnywhere, Category = "Player State")
+	float Shield = 100.f;
+
 	bool bIsEliminated = false;
 
 	UPROPERTY()
@@ -209,6 +230,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	USoundCue* EliminationBotSound;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -227,8 +251,13 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool GetIsEliminated() const { return bIsEliminated; }
 	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
-	FORCEINLINE UCombatComponent* GetCombatComponent() { return CombatComponent; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
 	FORCEINLINE bool GetDisableGameplay() { return bDisableGameplay; }
 
+	FORCEINLINE void AddHealth(float HealAmount) { Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth) ; }
+	FORCEINLINE void AddShield(float ShieldReplenishAmount) { Shield = FMath::Clamp(Shield + ShieldReplenishAmount, 0.f, MaxShield); }
 };
