@@ -48,7 +48,15 @@ void APickup::BeginPlay()
 	Super::BeginPlay();
 
 	if (HasAuthority())
-		PickupSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnPickupSphereOverlap);
+	{
+		GetWorldTimerManager().SetTimer(
+			BindOverlapTimer,
+			this,
+			&APickup::BindOverlapTimerFinished,
+			BindOverlapTime
+		);
+	}
+		
 }
 
 void APickup::Destroyed()
@@ -93,4 +101,9 @@ void APickup::EnableCustomDepth(bool bEnable)
 	{
 		PickupMesh->SetRenderCustomDepth(bEnable);
 	}
+}
+
+void APickup::BindOverlapTimerFinished()
+{
+	PickupSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnPickupSphereOverlap);
 }

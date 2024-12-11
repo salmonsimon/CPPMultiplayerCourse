@@ -188,7 +188,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxShield = 100.f;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player State")
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, EditAnywhere, Category = "Player State")
 	float Shield = 100.f;
 
 	bool bIsEliminated = false;
@@ -250,6 +250,5 @@ public:
 	FORCEINLINE bool GetDisableGameplay() { return bDisableGameplay; }
 
 	FORCEINLINE void AddHealth(float HealAmount) { Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth) ; }
-	FORCEINLINE void SetHealth(float NewHealth) { Health = NewHealth; }
-
+	FORCEINLINE void AddShield(float ShieldReplenishAmount) { Shield = FMath::Clamp(Shield + ShieldReplenishAmount, 0.f, MaxShield); }
 };

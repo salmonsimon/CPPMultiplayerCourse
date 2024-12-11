@@ -4,17 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Pickups/Pickup.h"
+#include "ShieldPickup.generated.h"
 
-#include "HealthPickup.generated.h"
-
-class UNiagaraComponent;
-class UNiagaraSystem;
-
+/**
+ * 
+ */
 UCLASS()
-class BLASTER_API AHealthPickup : public APickup
+class BLASTER_API AShieldPickup : public APickup
 {
 	GENERATED_BODY()
-
+	
 protected:
 
 	virtual void OnPickupSphereOverlap(
@@ -28,10 +27,10 @@ protected:
 
 private:
 
-	UPROPERTY(EditAnywhere, Category = "Pickup|HealBuff")
-	float HealAmount = 100.f;
+	UPROPERTY(EditAnywhere, Category = "Pickup|ShieldBuff")
+	float ShieldReplenishAmount = 100.f;
 
-	UPROPERTY(EditAnywhere, Category = "Pickup|HealBuff")
-	float HealingTime = 5.f;	
-	
+	UPROPERTY(EditAnywhere, Category = "Pickup|ShieldBuff")
+	float ShieldReplenishTime = 5.f;
+
 };

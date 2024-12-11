@@ -43,6 +43,8 @@ protected:
 
 private:
 
+	void BindOverlapTimerFinished();
+
 	UPROPERTY(EditAnywhere, Category = "Pickup|Configuration")
 	USphereComponent* PickupSphere;
 
@@ -60,5 +62,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Pickup|Configuration")
 	UNiagaraSystem* PickupEffect;
+
+	FTimerHandle BindOverlapTimer;
+	float BindOverlapTime = 0.25f;
 
 };
