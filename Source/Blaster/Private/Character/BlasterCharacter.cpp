@@ -470,18 +470,19 @@ void ABlasterCharacter::Equip(const FInputActionValue& Value)
     if (bDisableGameplay)
         return;
 
-    if (CombatComponent)
-    {
-        if (HasAuthority())
-            CombatComponent->EquipWeapon(OverlappingWeapon);
-        else
-            Server_Equip();
-    }
+    if (CombatComponent && GetCombatState() == ECombatState::ECS_Unoccupied)
+        Server_Equip();
 }
 
 void ABlasterCharacter::Server_Equip_Implementation()
 {
-    CombatComponent->EquipWeapon(OverlappingWeapon);
+    if (CombatComponent)
+    {
+        if (OverlappingWeapon)
+            CombatComponent->EquipWeapon(OverlappingWeapon);
+        else if (CombatComponent->ShouldSwapWeapon())
+            CombatComponent->SwapWeapons();
+    }
 }
 
 void ABlasterCharacter::PlayFireMontage(bool bIsAiming)

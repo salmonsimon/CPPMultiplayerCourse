@@ -29,6 +29,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+	void SwapWeapons();
 
 	void FireButtonPressed(bool bPressed);
 
@@ -58,9 +59,15 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
+
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairs(float DeltaTime);
+
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 
 private:	
 
@@ -84,6 +91,8 @@ private:
 	int32 AmountToReload();
 	void UpdateAmmoValues();
 
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
+
 	ABlasterCharacter* Character;
 
 	UPROPERTY()
@@ -94,6 +103,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool bIsAiming;
@@ -170,4 +182,5 @@ public:
 	FORCEINLINE int32 GetWeaponAmmo() { return EquippedWeapon->GetCurrentAmmo(); }
 
 	void SetIsAiming(bool IsAiming);
+	bool ShouldSwapWeapon();
 };
