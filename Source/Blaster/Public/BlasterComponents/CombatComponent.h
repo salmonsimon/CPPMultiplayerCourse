@@ -34,6 +34,8 @@ public:
 	void FireButtonPressed(bool bPressed);
 
 	void Fire();
+	void LocalFire(const FVector_NetQuantize& TraceHitResult);
+
 	void Reload();
 
 	UFUNCTION(BlueprintCallable)
