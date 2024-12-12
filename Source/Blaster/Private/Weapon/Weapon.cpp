@@ -55,13 +55,10 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (HasAuthority())
-	{
-		PickupArea->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		PickupArea->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-		PickupArea->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnPickupSphereOverlap);
-		PickupArea->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnPickupSphereEndOverlap);
-	}
+	PickupArea->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	PickupArea->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	PickupArea->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnPickupSphereOverlap);
+	PickupArea->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnPickupSphereEndOverlap); 
 
 	if (PickupWidget)
 		PickupWidget->SetVisibility(false);
