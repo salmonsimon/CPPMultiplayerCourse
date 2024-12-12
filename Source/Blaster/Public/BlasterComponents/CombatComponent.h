@@ -34,6 +34,10 @@ public:
 	void FireButtonPressed(bool bPressed);
 
 	void Fire();
+	void FireProjectile();
+	void FireHitscan();
+	void FireShotgun();
+
 	void LocalFire(const FVector_NetQuantize& TraceHitResult);
 
 	void Reload();

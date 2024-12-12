@@ -21,7 +21,7 @@ public:
 
 private:
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter")
 	uint32 NumberOfpellets = 10;
 	
 };

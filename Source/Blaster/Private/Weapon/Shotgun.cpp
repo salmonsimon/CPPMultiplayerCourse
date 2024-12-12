@@ -29,7 +29,7 @@ void AShotgun::Fire(const FVector& HitTarget)
 
 		for (uint32 i = 0; i < NumberOfpellets; i++)
 		{
-			FVector TraceEnd = TraceEndWithScatter(TraceStart, HitTarget);
+			FVector TraceEnd = TraceEndWithScatter(HitTarget);
 
 			FHitResult FireHit;
 			WeaponTraceHit(TraceStart, HitTarget, FireHit);

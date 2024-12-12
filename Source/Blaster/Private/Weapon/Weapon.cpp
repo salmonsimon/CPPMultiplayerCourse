@@ -12,6 +12,8 @@
 #include "PlayerController/BlasterPlayerController.h"
 #include "Weapon/BulletShell.h"
 
+#include "Kismet/KismetMathLibrary.h"
+
 #include "Net/UnrealNetwork.h"
 
 AWeapon::AWeapon()
@@ -218,6 +220,31 @@ void AWeapon::EnableCustomDepth(bool bEnable)
 	{
 		WeaponMesh->SetRenderCustomDepth(bEnable);
 	}
+}
+
+FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket == nullptr)
+		return FVector();
+
+	FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	FVector TraceStart = SocketTransform.GetLocation();
+
+	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	FVector ScatterSphereCenter = TraceStart + ToTargetNormalized * DistanceToScatterSphere;
+
+	FVector RandomScatterVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, ScatterSphereRadius);
+	FVector EndLocation = ScatterSphereCenter + RandomScatterVector;
+	FVector ToEndLocation = EndLocation - TraceStart;
+
+	/*
+	DrawDebugSphere(GetWorld(), ScatterSphereCenter, ScatterSphereRadius, 18, FColor::Red, true);
+	DrawDebugSphere(GetWorld(), EndLocation, 4.f, 18, FColor::Orange, true);
+	DrawDebugLine(GetWorld(), TraceStart, TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size(), FColor::Cyan, true);
+	*/
+
+	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size());
 }
 
 void AWeapon::OnRep_Owner()

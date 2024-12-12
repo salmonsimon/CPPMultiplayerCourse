@@ -32,6 +32,16 @@ enum class EWeaponState : uint8
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Hitscan UMETA(DisplayName = "Hitscan Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -53,6 +63,8 @@ public:
 	void AddAmmo(int32 AmmoToAdd);
 
 	void EnableCustomDepth(bool bEnable);
+
+	FVector TraceEndWithScatter(const FVector& HitTarget);
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairCenter;
@@ -99,6 +111,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	UAnimationAsset* FireAnimation;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter")
+	bool bUseScatter = false;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter", Meta = (EditCondition = "bUseScatter"))
+	float DistanceToScatterSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter", Meta = (EditCondition = "bUseScatter"))
+	float ScatterSphereRadius = 75.f;
 
 private:
 
@@ -154,10 +175,12 @@ private:
 	EWeaponType WeaponType;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
+	EFireType FireType;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	USoundCue* EquipSound;
 
 	bool bDestroyOnElimination = false;
-		
 
 public:
 	void SetWeaponState(EWeaponState State);
@@ -170,10 +193,12 @@ public:
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 	FORCEINLINE	bool GetIsAutomaticWeapon() const { return bIsAutomaticWeapon; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE EFireType GetFireType() const { return FireType; }
 	FORCEINLINE int32 GetCurrentAmmo() const { return CurrentAmmo; }
 	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
 	FORCEINLINE USoundCue* GetEquipSound() { return EquipSound; }
 	FORCEINLINE bool GetDestroyOnElimination() { return bDestroyOnElimination; }
 	FORCEINLINE void SetDestroyOnElimination(bool Value) { bDestroyOnElimination = Value; }
+	FORCEINLINE bool GetUseScatter() const { return bUseScatter; }
 
 };
