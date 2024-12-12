@@ -59,6 +59,10 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float Starting);
 
+	void CheckPing();
+	void HighPingWarning();
+	void StopHighPingWarning();
+
 private:
 
 	void SyncClientServerTimes();
@@ -109,5 +113,17 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
 	FName MatchState;
+
+	FTimerHandle HighPingTimerHandle;
+	FTimerHandle HighPingWarningStopTimerHandle;
+
+	UPROPERTY(EditAnywhere)
+	float HighPingWarningDuration = 5.f;
+
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 50.f;
 
 };
