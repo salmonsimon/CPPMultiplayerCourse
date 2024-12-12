@@ -228,15 +228,15 @@ FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
 	if (MuzzleFlashSocket == nullptr)
 		return FVector();
 
-	FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-	FVector TraceStart = SocketTransform.GetLocation();
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector TraceStart = SocketTransform.GetLocation();
 
-	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
-	FVector ScatterSphereCenter = TraceStart + ToTargetNormalized * DistanceToScatterSphere;
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector ScatterSphereCenter = TraceStart + ToTargetNormalized * DistanceToScatterSphere;
 
-	FVector RandomScatterVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, ScatterSphereRadius);
-	FVector EndLocation = ScatterSphereCenter + RandomScatterVector;
-	FVector ToEndLocation = EndLocation - TraceStart;
+	const FVector RandomScatterVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, ScatterSphereRadius);
+	const FVector EndLocation = ScatterSphereCenter + RandomScatterVector;
+	const FVector ToEndLocation = EndLocation - TraceStart;
 
 	/*
 	DrawDebugSphere(GetWorld(), ScatterSphereCenter, ScatterSphereRadius, 18, FColor::Red, true);

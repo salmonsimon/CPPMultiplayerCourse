@@ -18,6 +18,7 @@ public:
 
 	virtual void Fire(const FVector& HitTarget) override;
 
+	void ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector>& OutHitTargets);
 
 private:
 

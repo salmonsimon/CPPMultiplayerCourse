@@ -4,6 +4,7 @@
 #include "BlasterComponents/CombatComponent.h"
 
 #include "Weapon/Weapon.h"
+#include "Weapon/Shotgun.h"
 #include "Character/BlasterCharacter.h"
 #include "PlayerController/BlasterPlayerController.h"
 
@@ -274,8 +275,14 @@ void UCombatComponent::Fire()
 
 void UCombatComponent::FireProjectile()
 {
-	LocalFire(HitTarget);
-	Server_Fire(HitTarget);
+	if (EquippedWeapon)
+	{
+		HitTarget = EquippedWeapon->GetUseScatter() ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
+
+		LocalFire(HitTarget);
+		Server_Fire(HitTarget);
+	}
+	
 }
 
 void UCombatComponent::FireHitscan()
@@ -291,7 +298,13 @@ void UCombatComponent::FireHitscan()
 
 void UCombatComponent::FireShotgun()
 {
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
 
+	if (Shotgun)
+	{
+		TArray<FVector> HitTargets;
+		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
+	}
 }
 
 void UCombatComponent::StartFireTimer()

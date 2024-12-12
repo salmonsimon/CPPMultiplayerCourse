@@ -6,8 +6,12 @@
 #include "Character/BlasterCharacter.h"
 
 #include "Engine/SkeletalMeshSocket.h"
+
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+
 #include "Particles/ParticleSystemComponent.h"
+
 #include "Sound/SoundCue.h"
 
 void AShotgun::Fire(const FVector& HitTarget)
@@ -82,5 +86,29 @@ void AShotgun::Fire(const FVector& HitTarget)
 				);
 			}
 		}
+	}
+}
+
+void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector>& OutHitTargets)
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket == nullptr)
+		return;
+
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector TraceStart = SocketTransform.GetLocation();
+
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector ScatterSphereCenter = TraceStart + ToTargetNormalized * DistanceToScatterSphere;
+
+	for (uint32 i = 0; i < NumberOfpellets; i++)
+	{
+		const FVector RandomScatterVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, ScatterSphereRadius);
+		const FVector EndLocation = ScatterSphereCenter + RandomScatterVector;
+
+		FVector ToEndLocation = EndLocation - TraceStart;
+		ToEndLocation = TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size();
+
+		OutHitTargets.Add(ToEndLocation);
 	}
 }
