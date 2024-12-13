@@ -127,10 +127,16 @@ private:
 	void OnRep_WeaponState();
 
 	UFUNCTION()
-	void OnRep_Ammo();
-
-	UFUNCTION()
 	void SpendRound();
+
+	UFUNCTION(Client, Reliable)
+	void Client_UpdateCurrentAmmo(int32 ServerCurrentAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void Client_AddAmmo(int32 AmmoToAdd);
+
+	// Number of unprocessed server requests for CurrentAmmo
+	int32 AmmoRequestSequence = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon|Main Configuration")
 	USkeletalMeshComponent* WeaponMesh;
@@ -159,7 +165,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	bool bIsAutomaticWeapon = true;
 	
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, Category = "Weapon|Combat")
+	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	int32 CurrentAmmo;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")

@@ -50,7 +50,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, CurrentAmmo);
 }
 
 void AWeapon::BeginPlay()
@@ -180,6 +179,8 @@ void AWeapon::OnDropped()
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true);
+	
+	AmmoRequestSequence = 0;
 }
 
 void AWeapon::SetHUDAmmo()
@@ -200,15 +201,41 @@ void AWeapon::SpendRound()
 	CurrentAmmo = FMath::Clamp(CurrentAmmo - 1, 0, MagazineCapacity);
 
 	SetHUDAmmo();
-}
 
-void AWeapon::OnRep_Ammo()
-{
-	SetHUDAmmo();
+	if (HasAuthority())
+		Client_UpdateCurrentAmmo(CurrentAmmo);
+	else if (BlasterOwnerCharacter && BlasterOwnerCharacter->IsLocallyControlled())
+		AmmoRequestSequence++;
 }
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
+	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MagazineCapacity);
+
+	Client_AddAmmo(AmmoToAdd);
+
+	SetHUDAmmo();
+}
+
+void AWeapon::Client_UpdateCurrentAmmo_Implementation(int32 ServerCurrentAmmo)
+{
+	if (HasAuthority())
+		return;
+
+	CurrentAmmo = ServerCurrentAmmo;
+
+	AmmoRequestSequence--;
+
+	CurrentAmmo -= AmmoRequestSequence;
+
+	SetHUDAmmo();
+}
+
+void AWeapon::Client_AddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority())
+		return;
+
 	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MagazineCapacity);
 
 	SetHUDAmmo();
@@ -295,9 +322,8 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
-
-	if (HasAuthority())
-		SpendRound();
+	
+	SpendRound();
 }
 
 void AWeapon::Drop()
