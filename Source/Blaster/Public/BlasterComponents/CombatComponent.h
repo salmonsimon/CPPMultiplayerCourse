@@ -190,6 +190,8 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
+	bool bIsLocallyReloading = false;
+
 public:
 	FORCEINLINE void SetOwningCharacter(ABlasterCharacter* OwningCharacter) { Character = OwningCharacter; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() { return EquippedWeapon; }
@@ -199,6 +201,7 @@ public:
 	FORCEINLINE ECombatState GetCombatState() { return CombatState; }
 	FORCEINLINE int32 GetCarriedAmmo() { return CarriedAmmo; }
 	FORCEINLINE int32 GetWeaponAmmo() { return EquippedWeapon->GetCurrentAmmo(); }
+	FORCEINLINE bool GetIsLocallyReloading() { return bIsLocallyReloading; }
 
 	void SetIsAiming(bool IsAiming);
 	bool ShouldSwapWeapon();

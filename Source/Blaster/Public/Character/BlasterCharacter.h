@@ -238,6 +238,7 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool IsLocallyReloading();
 	FVector GetHitTarget();
 
 	AWeapon* GetEquippedWeapon();

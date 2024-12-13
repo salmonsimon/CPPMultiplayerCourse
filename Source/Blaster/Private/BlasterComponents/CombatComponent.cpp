@@ -401,20 +401,32 @@ void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& Trace
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
+	if (Character == nullptr || EquippedWeapon == nullptr)
+		return;
+
+	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && !EquippedWeapon->IsFull() && !bIsLocallyReloading)
+	{
 		Server_Reload();
+		HandleReload();
+		bIsLocallyReloading = true;
+	}
 }
 
 void UCombatComponent::Server_Reload_Implementation()
 {
+	if (Character == nullptr || EquippedWeapon == nullptr)
+		return;
+
 	CombatState = ECombatState::ECS_Reloading;
 
-	HandleReload();
+	if (!Character->IsLocallyControlled())
+		HandleReload();
 }
 
 void UCombatComponent::HandleReload()
 {
-	Character->PlayReloadMontage();
+	if (Character)
+		Character->PlayReloadMontage();	
 }
 
 int32 UCombatComponent::AmountToReload()
@@ -436,6 +448,8 @@ int32 UCombatComponent::AmountToReload()
 void UCombatComponent::FinishedReloading()
 {
 	if (Character == nullptr) return;
+
+	bIsLocallyReloading = false;
 
 	if (Character->HasAuthority())
 	{
@@ -639,7 +653,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 
 bool UCombatComponent::CanFire()
 {
-	if (EquippedWeapon == nullptr || EquippedWeapon->IsEmpty() || !bCanFire || CombatState == ECombatState::ECS_Reloading)
+	if (EquippedWeapon == nullptr || EquippedWeapon->IsEmpty() || !bCanFire || CombatState == ECombatState::ECS_Reloading || bIsLocallyReloading)
 		return false;
 
 	return true;
@@ -647,7 +661,7 @@ bool UCombatComponent::CanFire()
 
 bool UCombatComponent::ShouldReloadInsteadOfFiring()
 {
-	if (EquippedWeapon && EquippedWeapon->IsEmpty() && bCanFire && CombatState != ECombatState::ECS_Reloading && CarriedAmmo > 0)
+	if (EquippedWeapon && EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied && CarriedAmmo > 0)
 		return true;
 
 	return false;
@@ -666,7 +680,8 @@ void UCombatComponent::OnRep_CombatState()
 	{
 		case ECombatState::ECS_Reloading:
 
-			HandleReload();
+			if (Character && !Character->IsLocallyControlled())
+				HandleReload();
 
 			break;
 

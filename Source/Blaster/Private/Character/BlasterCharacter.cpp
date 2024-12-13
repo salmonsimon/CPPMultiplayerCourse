@@ -818,6 +818,14 @@ bool ABlasterCharacter::IsAiming()
     return (CombatComponent && CombatComponent->IsAiming());
 }
 
+bool ABlasterCharacter::IsLocallyReloading()
+{
+    if (CombatComponent == nullptr)
+        return false;
+
+    return CombatComponent->GetIsLocallyReloading();
+}
+
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
     if (CombatComponent == nullptr) return nullptr;

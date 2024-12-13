@@ -66,6 +66,8 @@ public:
 
 	FVector TraceEndWithScatter(const FVector& HitTarget);
 
+	bool IsFull();
+
 	UPROPERTY(EditAnywhere, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairCenter;
 

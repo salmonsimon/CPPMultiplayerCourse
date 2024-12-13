@@ -274,6 +274,11 @@ FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
 	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size());
 }
 
+bool AWeapon::IsFull()
+{
+	return CurrentAmmo == MagazineCapacity;
+}
+
 void AWeapon::OnRep_Owner()
 {
 	Super::OnRep_Owner();
