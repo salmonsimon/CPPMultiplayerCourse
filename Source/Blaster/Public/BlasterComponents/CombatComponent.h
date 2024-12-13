@@ -39,6 +39,7 @@ public:
 	void FireShotgun();
 
 	void LocalFire(const FVector_NetQuantize& TraceHitResult);
+	void ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitResults);
 
 	void Reload();
 
@@ -50,6 +51,12 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Fire(const FVector_NetQuantize& TraceHitResult);
+
+	UFUNCTION(Server, Reliable)
+	void Server_ShotgunFire(const TArray<FVector_NetQuantize>& TraceHitResults);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ShotgunFire(const TArray<FVector_NetQuantize>& TraceHitResults);
 
 	UFUNCTION(Server, Reliable)
 	void Server_Reload();
