@@ -193,6 +193,12 @@ void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 		Reload();
 }
 
+void UCombatComponent::OnRep_Aiming()
+{
+	if (Character && Character->IsLocallyControlled())
+		bIsAiming = bAimButtonPressed;
+}
+
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
@@ -485,6 +491,9 @@ void UCombatComponent::SetIsAiming(bool IsAiming)
 
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Sniper)
 		Character->ShowSniperScopeWidget(bIsAiming);
+
+	if (Character && Character->IsLocallyControlled())
+		bAimButtonPressed = bIsAiming;
 }
 
 bool UCombatComponent::ShouldSwapWeapon()

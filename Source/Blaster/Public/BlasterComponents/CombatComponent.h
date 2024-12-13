@@ -95,6 +95,9 @@ private:
 	void InitializeCarriedAmmo();
 
 	UFUNCTION()
+	void OnRep_Aiming();
+
+	UFUNCTION()
 	void OnRep_CarriedAmmo();
 
 	UFUNCTION()
@@ -120,8 +123,10 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
 
-	UPROPERTY(Replicated)
-	bool bIsAiming;
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
+	bool bIsAiming = false;
+
+	bool bAimButtonPressed = false;
 
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed = 750.f;
