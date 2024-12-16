@@ -20,6 +20,7 @@ class UBlasterCharacterInputData;
 class AWeapon;
 class UCombatComponent;
 class UBuffComponent;
+class ULagCompensationComponent;
 class ABlasterPlayerState;
 
 class UInputMappingContext;
@@ -29,6 +30,7 @@ class UWidgetComponent;
 class USoundCue;
 class UParticleSystem;
 class UParticleSystemComponent;
+class UBoxComponent;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairInterface
@@ -104,6 +106,67 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	UBlasterCharacterInputData* InputActions;
 
+#pragma region Hitboxes for server side rewind
+	
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* head;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Pelvis;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_02;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_03;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* backpack;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* blanket; // attached to backpack
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* UpperArm_R;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* UpperArm_L;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Hand_R;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Hand_L;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Thigh_R;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Thigh_L;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Foot_R;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Foot_L;
+
+	UPROPERTY()
+	TMap<FName, UBoxComponent*> HitCollisionBoxes;
+
+#pragma endregion
+
 private:
 
 	void PollInit();
@@ -157,6 +220,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UBuffComponent* BuffComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	ULagCompensationComponent* LagCompensationComponent;
 
 	float AO_Yaw;
 	float InterpAO_Yaw;
@@ -261,4 +327,6 @@ public:
 
 	FORCEINLINE void AddHealth(float HealAmount) { Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth) ; }
 	FORCEINLINE void AddShield(float ShieldReplenishAmount) { Shield = FMath::Clamp(Shield + ShieldReplenishAmount, 0.f, MaxShield); }
+
+	FORCEINLINE TMap<FName, UBoxComponent*> GetHitCollisionBoxes() { return HitCollisionBoxes; }
 };
