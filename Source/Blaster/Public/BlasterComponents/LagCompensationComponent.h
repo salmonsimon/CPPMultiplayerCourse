@@ -50,6 +50,7 @@ struct FServerSideRewindResult
 
 class ABlasterCharacter;
 class ABlasterPlayerController;
+class AWeapon;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API ULagCompensationComponent : public UActorComponent
@@ -62,15 +63,17 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
+	void ServerScoreRequest(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, AWeapon* DamageCauser);
 
 	FServerSideRewindResult ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
+
 
 protected:
 
 	virtual void BeginPlay() override;
 
 	void SaveFramePackage(FFramePackage& Package);
+	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
 
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
 
@@ -79,6 +82,8 @@ protected:
 	void MoveHitBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& Package, bool bResetHitBoxes = false);
 
 	void EnableCharacterMeshCollision(ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
+
+	void SaveFramePackage();
 
 private:
 

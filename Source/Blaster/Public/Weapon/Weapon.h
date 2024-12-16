@@ -111,6 +111,15 @@ protected:
 		int32 OtherBodyIndex
 	);
 
+	UPROPERTY()
+	ABlasterCharacter* BlasterOwnerCharacter;
+
+	UPROPERTY()
+	ABlasterPlayerController* BlasterOwnerController;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
+	float Damage = 20.f;
+
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	UAnimationAsset* FireAnimation;
 
@@ -122,6 +131,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter", Meta = (EditCondition = "bUseScatter"))
 	float ScatterSphereRadius = 75.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
+	bool bUseServerSideRewind = false;
 
 private:
 
@@ -173,12 +185,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	int32 MagazineCapacity;
 
-	UPROPERTY()
-	ABlasterCharacter* BlasterOwnerCharacter;
-
-	UPROPERTY()
-	ABlasterPlayerController* BlasterOwnerController;
-
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	EWeaponType WeaponType;
 
@@ -208,5 +214,7 @@ public:
 	FORCEINLINE bool GetDestroyOnElimination() { return bDestroyOnElimination; }
 	FORCEINLINE void SetDestroyOnElimination(bool Value) { bDestroyOnElimination = Value; }
 	FORCEINLINE bool GetUseScatter() const { return bUseScatter; }
+	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE bool GetUseServerSideRewind() const { return bUseServerSideRewind; }
 
 };

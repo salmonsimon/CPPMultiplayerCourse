@@ -126,4 +126,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold = 50.f;
 
+	UPROPERTY()
+	float SingleTripTime = 0.f;
+
+public:
+
+	FORCEINLINE float GetSingleTripTime() const { return SingleTripTime; }
+
 };
