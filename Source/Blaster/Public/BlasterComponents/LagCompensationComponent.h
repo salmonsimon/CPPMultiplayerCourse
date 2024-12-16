@@ -54,6 +54,7 @@ public:
 	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
 
 	void ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
 	
 protected:
 
