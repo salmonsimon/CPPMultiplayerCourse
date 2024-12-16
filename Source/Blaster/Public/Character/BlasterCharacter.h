@@ -323,6 +323,7 @@ public:
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
+	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensationComponent; }
 	FORCEINLINE bool GetDisableGameplay() { return bDisableGameplay; }
 
 	FORCEINLINE void AddHealth(float HealAmount) { Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth) ; }

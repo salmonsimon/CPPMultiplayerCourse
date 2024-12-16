@@ -44,7 +44,7 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		SaveFramePackage(ThisFrame);
 		FrameHistory.AddHead(ThisFrame);
 
-		ShowFramePackage(ThisFrame, FColor::Orange);
+		//ShowFramePackage(ThisFrame, FColor::Orange);
 	}
 }
 
@@ -81,5 +81,66 @@ void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package, c
 			4.f
 		);
 	}
+}
+
+void ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
+{
+	bool bReturn =
+		HitCharacter == nullptr ||
+		HitCharacter->GetLagCompensationComponent() == nullptr ||
+		HitCharacter->GetLagCompensationComponent()->FrameHistory.GetHead() == nullptr ||
+		HitCharacter->GetLagCompensationComponent()->FrameHistory.GetTail() == nullptr;
+
+	bool bShouldInterpolate = true;
+
+	FFramePackage FrameToCheck;
+
+	const TDoubleLinkedList<FFramePackage>& History = HitCharacter->GetLagCompensationComponent()->FrameHistory;
+
+	const float OldestHistoryTime = History.GetTail()->GetValue().Time;
+	const float NewestHistoryTime = History.GetHead()->GetValue().Time;
+
+	if (HitTime < OldestHistoryTime)
+		return;
+
+	if (OldestHistoryTime == HitTime)
+	{
+		FrameToCheck = History.GetHead()->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	if (NewestHistoryTime <= HitTime)
+	{
+		FrameToCheck = History.GetHead()->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Younger = History.GetHead();
+	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Older = Younger;
+
+	while (HitTime < Older->GetValue().Time)
+	{
+		if (Older->GetNextNode() == nullptr)
+			break;
+
+		Older = Older->GetNextNode();
+
+		if (HitTime > Older->GetValue().Time)
+			Younger = Older;
+	}
+
+	if (Older->GetValue().Time == HitTime)
+	{
+		FrameToCheck = Older->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	if (bShouldInterpolate)
+	{
+		return;
+	}
+
+	if (bReturn)
+		return;
 }
 

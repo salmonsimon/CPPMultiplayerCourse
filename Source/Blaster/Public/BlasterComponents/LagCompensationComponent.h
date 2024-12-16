@@ -52,6 +52,8 @@ public:
 
 	void SaveFramePackage(FFramePackage& Package);
 	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
+
+	void ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);
 	
 protected:
 
