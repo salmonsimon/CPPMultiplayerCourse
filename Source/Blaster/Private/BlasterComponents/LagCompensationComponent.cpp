@@ -133,7 +133,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewin
 	return ShotgunConfirmHit(FramesToCheck, TraceStart, HitLocations);
 }
 
-void ULagCompensationComponent::ShotgunServerScoreRequest(const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
+void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
 {
 	FShotgunServerSideRewindResult Confirm = ShotgunServerSideRewind(HitCharacters, TraceStart, HitLocations, HitTime);
 
