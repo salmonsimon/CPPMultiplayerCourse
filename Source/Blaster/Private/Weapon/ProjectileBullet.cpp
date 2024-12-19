@@ -26,6 +26,7 @@ void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
 
+	/*
 	FPredictProjectilePathParams PathParams;
 
 	PathParams.ActorsToIgnore.Add(this);
@@ -42,6 +43,8 @@ void AProjectileBullet::BeginPlay()
 	FPredictProjectilePathResult PathResult;
 
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+	*/
+	
 }
 
 #if WITH_EDITOR
