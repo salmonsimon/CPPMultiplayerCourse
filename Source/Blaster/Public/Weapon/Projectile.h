@@ -45,7 +45,6 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UProjectileMovementComponent* ProjectileMovementComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Projectile|Configuration")
 	float Damage = 20.f;
 
 	UPROPERTY(EditAnywhere)
@@ -100,5 +99,13 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Projectile|Configuration")
 	float DestroyTime = 3.f;
+
+public:
+
+	FORCEINLINE float GetInitialSpeed() const { return InitialSpeed; }
+	FORCEINLINE void SetUseServerSideRewind(bool Value) { bUseServerSideRewind = Value; }
+	FORCEINLINE void SetTraceStart(FVector_NetQuantize NewTraceStart) { TraceStart = NewTraceStart; }
+	FORCEINLINE void SetInitialVelocity(FVector_NetQuantize100 NewInitialVelocity) { InitialVelocity = NewInitialVelocity; }
+	FORCEINLINE void SetDamage(float NewDamage) { Damage = NewDamage; }
 
 };

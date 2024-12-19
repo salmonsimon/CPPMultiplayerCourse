@@ -22,4 +22,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	TSubclassOf<class AProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
+	TSubclassOf<class AProjectile> ServerSideRewindProjectileClass;
 };
