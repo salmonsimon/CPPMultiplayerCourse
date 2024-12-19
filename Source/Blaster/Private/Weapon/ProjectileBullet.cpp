@@ -4,6 +4,7 @@
 #include "Weapon/ProjectileBullet.h"
 
 #include "GameFramework/Character.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -42,4 +43,21 @@ void AProjectileBullet::BeginPlay()
 
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 }
+
+#if WITH_EDITOR
+void AProjectileBullet::PostEditChangeProperty(FPropertyChangedEvent& Event)
+{
+	Super::PostEditChangeProperty(Event);
+
+	FName ChangedPropertyName = Event.Property != nullptr ? Event.Property->GetFName() : NAME_None;
+	if (ChangedPropertyName == GET_MEMBER_NAME_CHECKED(AProjectileBullet, InitialSpeed))
+	{
+		if (ProjectileMovementComponent)
+		{
+			ProjectileMovementComponent->InitialSpeed = InitialSpeed;
+			ProjectileMovementComponent->MaxSpeed = InitialSpeed;
+		}
+	}
+}
+#endif
 
