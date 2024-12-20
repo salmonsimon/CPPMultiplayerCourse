@@ -342,7 +342,11 @@ void ABlasterPlayerController::CheckPing()
 			HighPingWarning();
 
 			GetWorld()->GetTimerManager().SetTimer(HighPingWarningStopTimerHandle, this, &ABlasterPlayerController::StopHighPingWarning, HighPingWarningDuration);
+
+			ServerReportPingStatus(true);
 		}
+		else
+			ServerReportPingStatus(false);
 	}
 }
 
@@ -380,6 +384,11 @@ void ABlasterPlayerController::StopHighPingWarning()
 			BlasterHUD->CharacterOverlay->StopAnimation(BlasterHUD->CharacterOverlay->HighPingAnimation);
 		}
 	}
+}
+
+void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	HighPingDelegate.Broadcast(bHighPing);
 }
 
 void ABlasterPlayerController::SyncClientServerTimes()

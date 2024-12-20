@@ -111,6 +111,9 @@ protected:
 		int32 OtherBodyIndex
 	);
 
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
+
 	UPROPERTY()
 	ABlasterCharacter* BlasterOwnerCharacter;
 
@@ -132,7 +135,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter", Meta = (EditCondition = "bUseScatter"))
 	float ScatterSphereRadius = 75.f;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
+	UPROPERTY(Replicated, EditAnywhere, Category = "Weapon|Main Configuration")
 	bool bUseServerSideRewind = false;
 
 private:
