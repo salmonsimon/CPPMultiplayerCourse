@@ -586,8 +586,25 @@ void ABlasterCharacter::Equip(const FInputActionValue& Value)
     if (bDisableGameplay)
         return;
 
-    if (CombatComponent && GetCombatState() == ECombatState::ECS_Unoccupied)
-        Server_Equip();
+    if (CombatComponent)
+    {
+        if (CombatComponent && GetCombatState() == ECombatState::ECS_Unoccupied)
+            Server_Equip();
+
+        bool bSwap = CombatComponent->ShouldSwapWeapon() &&
+                     !HasAuthority() &&
+                     CombatComponent->GetCombatState() == ECombatState::ECS_Unoccupied &&
+                     OverlappingWeapon == nullptr;
+        
+        if (bSwap)
+        {
+            PlaySwapWeaponsMontage();
+            CombatComponent->SetCombatState(ECombatState::ECS_SwappingWeapons);
+            bFinishedSwappingWeapons = false;
+        }
+    }
+
+    
 }
 
 void ABlasterCharacter::Server_Equip_Implementation()
@@ -680,6 +697,14 @@ void ABlasterCharacter::PlayHitReactionMontage()
 
         AnimInstance->Montage_JumpToSection(SectionName);
     }
+}
+
+void ABlasterCharacter::PlaySwapWeaponsMontage()
+{
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+    if (AnimInstance && SwapWeaponsMontage)
+        AnimInstance->Montage_Play(SwapWeaponsMontage);
 }
 
 void ABlasterCharacter::MulticastHitReaction_Implementation()

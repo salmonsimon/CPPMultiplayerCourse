@@ -49,6 +49,7 @@ public:
 	void PlayFireMontage(bool bIsAiming);
 	void PlayReloadMontage();
 	void PlayEliminatedMontage();
+	void PlaySwapWeaponsMontage();
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastHitReaction();
@@ -251,6 +252,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* EliminatedMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SwapWeaponsMontage;
+
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f;
 
@@ -299,6 +303,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
+	bool bFinishedSwappingWeapons = false;
+
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -330,4 +336,7 @@ public:
 	FORCEINLINE void AddShield(float ShieldReplenishAmount) { Shield = FMath::Clamp(Shield + ShieldReplenishAmount, 0.f, MaxShield); }
 
 	FORCEINLINE TMap<FName, UBoxComponent*> GetHitCollisionBoxes() { return HitCollisionBoxes; }
+
+	FORCEINLINE bool GetFinishedSwappingWeapons() { return bFinishedSwappingWeapons; }
+	FORCEINLINE void SetFinishedSwappingWeapons(bool Value) { bFinishedSwappingWeapons = Value; }
 };

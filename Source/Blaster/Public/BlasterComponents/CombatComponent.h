@@ -46,6 +46,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishedReloading();
 
+	UFUNCTION(BlueprintCallable)
+	void FinishedSwappingWeapons();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishedSwappingAttachedWeapons();
+
 	UFUNCTION(Server, Reliable)
 	void Server_Fire(const FVector_NetQuantize& TraceHitResult);
 
@@ -199,6 +205,7 @@ public:
 	FORCEINLINE FVector GetHitTarget() { return HitTarget; }
 	FORCEINLINE bool IsAiming() { return bIsAiming; }
 	FORCEINLINE ECombatState GetCombatState() { return CombatState; }
+	FORCEINLINE void SetCombatState(ECombatState NewCombatState) { CombatState = NewCombatState; }
 	FORCEINLINE int32 GetCarriedAmmo() { return CarriedAmmo; }
 	FORCEINLINE int32 GetWeaponAmmo() { return EquippedWeapon->GetCurrentAmmo(); }
 	FORCEINLINE bool GetIsLocallyReloading() { return bIsLocallyReloading; }

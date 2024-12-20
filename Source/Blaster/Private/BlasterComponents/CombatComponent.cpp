@@ -52,9 +52,7 @@ void UCombatComponent::BeginPlay()
 		}
 
 		if (Character->HasAuthority())
-		{
 			InitializeCarriedAmmo();
-		}
 	}
 }
 
@@ -99,37 +97,15 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::SwapWeapons()
 {
-	AWeapon* TempWeapon = EquippedWeapon;
+	if (CombatState != ECombatState::ECS_Unoccupied || Character == nullptr || !Character->HasAuthority())
+		return;
 
-	EquippedWeapon = SecondaryWeapon;
-	SecondaryWeapon = TempWeapon;
+	Character->PlaySwapWeaponsMontage();
+	SetCombatState(ECombatState::ECS_SwappingWeapons);
+	Character->SetFinishedSwappingWeapons(false);
 
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if (HandSocket)
-		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
-
-	EquippedWeapon->SetHUDAmmo();
-
-	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-
-	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
-	if (Controller)
-		Controller->SetHUDCarriedAmmo(CarriedAmmo);
-
-	PlayEquipWeaponSound(EquippedWeapon);
-
-	if (EquippedWeapon->IsEmpty())
-		Reload();
-
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-
-	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
-	if (BackpackSocket)
-		BackpackSocket->AttachActor(SecondaryWeapon, Character->GetMesh());
-
+	if (SecondaryWeapon)
+		SecondaryWeapon->EnableCustomDepth(false);
 }
 
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
@@ -324,7 +300,8 @@ void UCombatComponent::FireShotgun()
 
 void UCombatComponent::StartFireTimer()
 {
-	if (EquippedWeapon == nullptr || Character == nullptr) return;
+	if (EquippedWeapon == nullptr || Character == nullptr) 
+		return;
 
 	Character->GetWorldTimerManager().SetTimer(
 		FireTimer,
@@ -336,7 +313,8 @@ void UCombatComponent::StartFireTimer()
 
 void UCombatComponent::FireTimerFinished()
 {
-	if (EquippedWeapon == nullptr) return;
+	if (EquippedWeapon == nullptr) 
+		return;
 
 	bCanFire = true;
 
@@ -375,7 +353,8 @@ void UCombatComponent::Multicast_ShotgunFire_Implementation(const TArray<FVector
 
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitResult)
 {
-	if (EquippedWeapon == nullptr) return;
+	if (EquippedWeapon == nullptr) 
+		return;
 
 	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
@@ -447,7 +426,8 @@ int32 UCombatComponent::AmountToReload()
 
 void UCombatComponent::FinishedReloading()
 {
-	if (Character == nullptr) return;
+	if (Character == nullptr) 
+		return;
 
 	bIsLocallyReloading = false;
 
@@ -461,9 +441,59 @@ void UCombatComponent::FinishedReloading()
 		Fire();
 }
 
+void UCombatComponent::FinishedSwappingWeapons()
+{
+	if (Character && Character->HasAuthority())
+		CombatState = ECombatState::ECS_Unoccupied;
+
+	if (Character)
+		Character->SetFinishedSwappingWeapons(true);
+
+	if (SecondaryWeapon)
+		SecondaryWeapon->EnableCustomDepth(true);
+}
+
+void UCombatComponent::FinishedSwappingAttachedWeapons()
+{
+	if (Character == nullptr || !Character->HasAuthority())
+		return;
+
+	AWeapon* TempWeapon = EquippedWeapon;
+
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = TempWeapon;
+
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	if (HandSocket)
+		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+
+	EquippedWeapon->SetHUDAmmo();
+
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+
+	PlayEquipWeaponSound(EquippedWeapon);
+
+	if (EquippedWeapon->IsEmpty())
+		Reload();
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+
+	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
+	if (BackpackSocket)
+		BackpackSocket->AttachActor(SecondaryWeapon, Character->GetMesh());
+}
+
 void UCombatComponent::UpdateAmmoValues()
 {
-	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	if (Character == nullptr || EquippedWeapon == nullptr) 
+		return;
 
 	int32 ReloadAmount = AmountToReload();
 
@@ -689,6 +719,13 @@ void UCombatComponent::OnRep_CombatState()
 
 			if (bFireButtonPressed)
 				Fire();
+
+			break;
+
+		case ECombatState::ECS_SwappingWeapons:
+
+			if (Character && !Character->IsLocallyControlled())
+				Character->PlaySwapWeaponsMontage();
 
 			break;
 	}
