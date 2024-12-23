@@ -10,6 +10,7 @@
 #include "HUD/BlasterHUD.h"
 #include "HUD/CharacterOverlay.h"
 #include "HUD/Announcement.h"
+#include "HUD/ReturnToMainMenu.h"
 #include "Character/BlasterCharacter.h"
 #include "GameModes/BlasterGameMode.h"
 #include "GameStates/BlasterGameState.h"
@@ -18,6 +19,10 @@
 
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+
+#include "EnhancedInputSubsystems.h"
+#include "InputActionValue.h"
+#include "EnhancedInput/Public/EnhancedInputComponent.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -91,6 +96,14 @@ void ABlasterPlayerController::PollInit()
 			}
 		}
 	}
+}
+
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+		EnhancedInputComponent->BindAction(InputQuit, ETriggerEvent::Started, this, &ABlasterPlayerController::ShowReturnToMainMenu);
 }
 
 void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
@@ -383,6 +396,25 @@ void ABlasterPlayerController::StopHighPingWarning()
 		{
 			BlasterHUD->CharacterOverlay->StopAnimation(BlasterHUD->CharacterOverlay->HighPingAnimation);
 		}
+	}
+}
+
+void ABlasterPlayerController::ShowReturnToMainMenu()
+{
+	if (ReturnToMainMenuWidget == nullptr)
+		return;
+
+	if (ReturnToMainMenu == nullptr)
+		ReturnToMainMenu = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidget);
+	
+	if (ReturnToMainMenu)
+	{
+		bReturnToMainMenuOpen = !bReturnToMainMenuOpen;
+
+		if (bReturnToMainMenuOpen)
+			ReturnToMainMenu->MenuSetup();
+		else
+			ReturnToMainMenu->MenuTearDown();
 	}
 }
 

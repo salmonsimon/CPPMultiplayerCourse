@@ -30,7 +30,7 @@ void UReturnToMainMenu::MenuSetup()
 		}
 	}
 
-	if (ReturnButton)
+	if (ReturnButton && !ReturnButton->OnClicked.IsBound())
 		ReturnButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
 
 	UGameInstance* GameInstance = GetGameInstance();
@@ -42,7 +42,7 @@ void UReturnToMainMenu::MenuSetup()
 	}
 }
 
-void UReturnToMainMenu::MenuTeardown()
+void UReturnToMainMenu::MenuTearDown()
 {
 	RemoveFromParent();
 
@@ -58,6 +58,12 @@ void UReturnToMainMenu::MenuTeardown()
 			PlayerController->SetShowMouseCursor(false);
 		}
 	}
+
+	if (ReturnButton && ReturnButton->OnClicked.IsBound())
+		ReturnButton->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
+
+	if (MultiplayerSessionSubsystem && MultiplayerSessionSubsystem->MultiplayerOnDestroySessionComplete.IsBound())
+		MultiplayerSessionSubsystem->MultiplayerOnDestroySessionComplete.RemoveDynamic(this, &UReturnToMainMenu::OnDestroySession);
 }
 
 bool UReturnToMainMenu::Initialize()

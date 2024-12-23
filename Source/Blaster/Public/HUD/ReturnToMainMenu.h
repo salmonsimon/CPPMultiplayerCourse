@@ -19,7 +19,7 @@ class BLASTER_API UReturnToMainMenu : public UUserWidget
 public:
 
 	void MenuSetup();
-	void MenuTeardown();
+	void MenuTearDown();
 
 protected:
 
