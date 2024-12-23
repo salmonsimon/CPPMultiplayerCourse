@@ -10,6 +10,8 @@
 
 #include "MultiplayerSessionsSubsystem.h"
 
+#include "Character/BlasterCharacter.h"
+
 void UReturnToMainMenu::MenuSetup()
 {
 	AddToViewport();
@@ -96,11 +98,36 @@ void UReturnToMainMenu::OnDestroySession(bool bWasSuccessful)
 	}
 }
 
+void UReturnToMainMenu::OnPlayerLeftGame()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnPlayerLeftGame()"))
+		if (MultiplayerSessionSubsystem)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MultiplayerSessionsSubsystem valid"))
+				MultiplayerSessionSubsystem->DestroySession();
+		}
+}
+
 void UReturnToMainMenu::ReturnButtonClicked()
 {
 	ReturnButton->SetIsEnabled(false);
 
-	if (MultiplayerSessionSubsystem)
-		MultiplayerSessionSubsystem->DestroySession();
-
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		APlayerController* FirstPlayerController = World->GetFirstPlayerController();
+		if (FirstPlayerController)
+		{
+			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FirstPlayerController->GetPawn());
+			if (BlasterCharacter)
+			{
+				BlasterCharacter->Server_LeaveGame();
+				BlasterCharacter->OnLeftGame.AddDynamic(this, &UReturnToMainMenu::OnPlayerLeftGame);
+			}
+			else
+			{
+				ReturnButton->SetIsEnabled(true);
+			}
+		}
+	}
 }

@@ -32,6 +32,8 @@ class UParticleSystem;
 class UParticleSystemComponent;
 class UBoxComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairInterface
 {
@@ -56,10 +58,10 @@ public:
 
 	virtual void OnRep_ReplicatedMovement() override;
 
-	void Eliminated();
+	void Eliminated(bool bPlayerLeftGame);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Eliminated();
+	void Multicast_Eliminated(bool bPlayerLeftGame);
 
 	virtual void Destroyed() override;
 
@@ -71,6 +73,11 @@ public:
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
 	void UpdateHUDAmmo();
+
+	UFUNCTION(Server, Reliable)
+	void Server_LeaveGame();
+
+	FOnLeftGame OnLeftGame;
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
@@ -305,6 +312,7 @@ private:
 
 	bool bFinishedSwappingWeapons = false;
 
+	bool bLeftGame = false;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);

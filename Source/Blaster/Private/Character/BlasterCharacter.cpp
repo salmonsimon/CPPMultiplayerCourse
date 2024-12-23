@@ -345,18 +345,11 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
     }
 }
 
-void ABlasterCharacter::Eliminated()
+void ABlasterCharacter::Eliminated(bool bPlayerLeftGame)
 {
     DropOrDestroyWeapons();
 
-    Multicast_Eliminated();
-
-    GetWorldTimerManager().SetTimer(
-        EliminatedTimer,
-        this,
-        &ABlasterCharacter::EliminatedTimerFinished,
-        EliminatedDelay
-    );
+    Multicast_Eliminated(bPlayerLeftGame);
 }
 
 void ABlasterCharacter::DropOrDestroyWeapons()
@@ -382,12 +375,13 @@ void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
     }
 }
 
-void ABlasterCharacter::Multicast_Eliminated_Implementation()
+void ABlasterCharacter::Multicast_Eliminated_Implementation(bool bPlayerLeftGame)
 {
     if (BlasterPlayerController)
         BlasterPlayerController->SetHUDWeaponAmmo(0);
 
     bIsEliminated = true;
+    bLeftGame = bPlayerLeftGame;
 
     PlayEliminatedMontage();
 
@@ -438,13 +432,20 @@ void ABlasterCharacter::Multicast_Eliminated_Implementation()
 
     if (bHideSniperScope)
         ShowSniperScopeWidget(false);
+
+    GetWorldTimerManager().SetTimer(
+        EliminatedTimer,
+        this,
+        &ABlasterCharacter::EliminatedTimerFinished,
+        EliminatedDelay
+    );
 }
 
 void ABlasterCharacter::EliminatedTimerFinished()
 {
     ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
 
-    if (BlasterGameMode)
+    if (BlasterGameMode && !bLeftGame)
         BlasterGameMode->RequestSpawn(this, Controller);
 }
 
@@ -505,6 +506,15 @@ void ABlasterCharacter::UpdateHUDAmmo()
         BlasterPlayerController->SetHUDCarriedAmmo(CombatComponent->GetCarriedAmmo());
         BlasterPlayerController->SetHUDWeaponAmmo(CombatComponent->GetWeaponAmmo());
     }
+}
+
+void ABlasterCharacter::Server_LeaveGame_Implementation()
+{
+    ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+    BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+
+    if (BlasterGameMode && BlasterPlayerState)
+        BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 }
 
 void ABlasterCharacter::HidePlayerIfTooClose()
