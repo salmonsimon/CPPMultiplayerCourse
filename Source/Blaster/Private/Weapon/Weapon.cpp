@@ -12,6 +12,8 @@
 #include "PlayerController/BlasterPlayerController.h"
 #include "Weapon/BulletShell.h"
 
+#include "Kismet/KismetMathLibrary.h"
+
 #include "Net/UnrealNetwork.h"
 
 AWeapon::AWeapon()
@@ -48,20 +50,17 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, CurrentAmmo);
+	DOREPLIFETIME_CONDITION(AWeapon, bUseServerSideRewind, COND_OwnerOnly);
 }
 
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (HasAuthority())
-	{
-		PickupArea->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		PickupArea->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-		PickupArea->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnPickupSphereOverlap);
-		PickupArea->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnPickupSphereEndOverlap);
-	}
+	PickupArea->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	PickupArea->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	PickupArea->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnPickupSphereOverlap);
+	PickupArea->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnPickupSphereEndOverlap); 
 
 	if (PickupWidget)
 		PickupWidget->SetVisibility(false);
@@ -70,6 +69,11 @@ void AWeapon::BeginPlay()
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AWeapon::OnPingTooHigh(bool bPingTooHigh)
+{
+	bUseServerSideRewind = !bPingTooHigh;
 }
 
 void AWeapon::OnPickupSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -143,6 +147,16 @@ void AWeapon::OnEquipped()
 	}
 
 	EnableCustomDepth(false);
+
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+
+	if (BlasterOwnerCharacter && bUseServerSideRewind)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+
+		if (BlasterOwnerController && HasAuthority() && !BlasterOwnerController->HighPingDelegate.IsBound())
+			BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
+	}
 }
 
 void AWeapon::OnEquippedSecondary()
@@ -164,6 +178,16 @@ void AWeapon::OnEquippedSecondary()
 	WeaponMesh->MarkRenderStateDirty();
 
 	EnableCustomDepth(true);
+
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+
+	if (BlasterOwnerCharacter && bUseServerSideRewind)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+
+		if (BlasterOwnerController && HasAuthority() && BlasterOwnerController->HighPingDelegate.IsBound())
+			BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+	}
 }
 
 void AWeapon::OnDropped()
@@ -181,6 +205,18 @@ void AWeapon::OnDropped()
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true);
+	
+	AmmoRequestSequence = 0;
+
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+
+	if (BlasterOwnerCharacter && bUseServerSideRewind)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+
+		if (BlasterOwnerController && HasAuthority() && BlasterOwnerController->HighPingDelegate.IsBound())
+			BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+	}
 }
 
 void AWeapon::SetHUDAmmo()
@@ -201,15 +237,41 @@ void AWeapon::SpendRound()
 	CurrentAmmo = FMath::Clamp(CurrentAmmo - 1, 0, MagazineCapacity);
 
 	SetHUDAmmo();
-}
 
-void AWeapon::OnRep_Ammo()
-{
-	SetHUDAmmo();
+	if (HasAuthority())
+		Client_UpdateCurrentAmmo(CurrentAmmo);
+	else if (BlasterOwnerCharacter && BlasterOwnerCharacter->IsLocallyControlled())
+		AmmoRequestSequence++;
 }
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
+	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MagazineCapacity);
+
+	Client_AddAmmo(AmmoToAdd);
+
+	SetHUDAmmo();
+}
+
+void AWeapon::Client_UpdateCurrentAmmo_Implementation(int32 ServerCurrentAmmo)
+{
+	if (HasAuthority())
+		return;
+
+	CurrentAmmo = ServerCurrentAmmo;
+
+	AmmoRequestSequence--;
+
+	CurrentAmmo -= AmmoRequestSequence;
+
+	SetHUDAmmo();
+}
+
+void AWeapon::Client_AddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority())
+		return;
+
 	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MagazineCapacity);
 
 	SetHUDAmmo();
@@ -221,6 +283,36 @@ void AWeapon::EnableCustomDepth(bool bEnable)
 	{
 		WeaponMesh->SetRenderCustomDepth(bEnable);
 	}
+}
+
+FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket == nullptr)
+		return FVector();
+
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector TraceStart = SocketTransform.GetLocation();
+
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector ScatterSphereCenter = TraceStart + ToTargetNormalized * DistanceToScatterSphere;
+
+	const FVector RandomScatterVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, ScatterSphereRadius);
+	const FVector EndLocation = ScatterSphereCenter + RandomScatterVector;
+	const FVector ToEndLocation = EndLocation - TraceStart;
+
+	/*
+	DrawDebugSphere(GetWorld(), ScatterSphereCenter, ScatterSphereRadius, 18, FColor::Red, true);
+	DrawDebugSphere(GetWorld(), EndLocation, 4.f, 18, FColor::Orange, true);
+	DrawDebugLine(GetWorld(), TraceStart, TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size(), FColor::Cyan, true);
+	*/
+
+	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size());
+}
+
+bool AWeapon::IsFull()
+{
+	return CurrentAmmo == MagazineCapacity;
 }
 
 void AWeapon::OnRep_Owner()
@@ -271,7 +363,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
-
+	
 	SpendRound();
 }
 

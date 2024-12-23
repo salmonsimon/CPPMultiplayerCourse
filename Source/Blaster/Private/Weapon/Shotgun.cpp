@@ -4,15 +4,24 @@
 #include "Weapon/Shotgun.h"
 
 #include "Character/BlasterCharacter.h"
+#include "PlayerController/BlasterPlayerController.h"
+#include "BlasterComponents/LagCompensationComponent.h"
 
 #include "Engine/SkeletalMeshSocket.h"
+
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+
 #include "Particles/ParticleSystemComponent.h"
+
 #include "Sound/SoundCue.h"
 
-void AShotgun::Fire(const FVector& HitTarget)
+#include "DrawDebugHelpers.h"
+
+
+void AShotgun::FireShotgun(const TArray<FVector_NetQuantize> HitTargets)
 {
-	AWeapon::Fire(HitTarget);
+	AWeapon::Fire(FVector());
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (OwnerPawn == nullptr) return;
@@ -22,24 +31,19 @@ void AShotgun::Fire(const FVector& HitTarget)
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
 	if (MuzzleFlashSocket)
 	{
-		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-		FVector TraceStart = SocketTransform.GetLocation();
+		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+		const FVector TraceStart = SocketTransform.GetLocation();
 
 		TMap<ACharacter*, uint32> HitMap;
 
-		for (uint32 i = 0; i < NumberOfpellets; i++)
+		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
-			FVector TraceEnd = TraceEndWithScatter(TraceStart, HitTarget);
-
 			FHitResult FireHit;
 			WeaponTraceHit(TraceStart, HitTarget, FireHit);
 
 			ACharacter* HitCharacter = Cast<ACharacter>(FireHit.GetActor());
 
-			if (HitCharacter &&
-				HitCharacter != Cast<ACharacter>(OwnerPawn) &&
-				HasAuthority() &&
-				InstigatorController)
+			if (HitCharacter && HitCharacter != Cast<ACharacter>(OwnerPawn))
 			{
 				if (HitMap.Contains(HitCharacter))
 					HitMap[HitCharacter]++;
@@ -69,18 +73,67 @@ void AShotgun::Fire(const FVector& HitTarget)
 			}
 		}
 
+		TArray<ABlasterCharacter*> HitCharacters;
+
 		for (auto HitPair : HitMap)
 		{
-			if (HitPair.Key && HasAuthority() && InstigatorController)
+			if (HitPair.Key && InstigatorController)
 			{
-				UGameplayStatics::ApplyDamage(
-					HitPair.Key,
-					Damage * HitPair.Value,
-					InstigatorController,
-					this,
-					UDamageType::StaticClass()
-				);
+				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+
+				if (HasAuthority() && bCauseAuthDamage)
+				{
+					UGameplayStatics::ApplyDamage(
+						HitPair.Key,
+						Damage * HitPair.Value,
+						InstigatorController,
+						this,
+						UDamageType::StaticClass()
+					);
+				}
+
+				ABlasterCharacter* HitBlasterCharacter = Cast<ABlasterCharacter>(HitPair.Key);
+				HitCharacters.Add(HitBlasterCharacter);
 			}
 		}
+
+		if (!HasAuthority() && bUseServerSideRewind)
+		{
+			BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
+			BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
+
+			if (BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensationComponent() && BlasterOwnerCharacter->IsLocallyControlled())
+				BlasterOwnerCharacter->GetLagCompensationComponent()->ShotgunServerScoreRequest(
+					HitCharacters, 
+					TraceStart, 
+					HitTargets, 
+					BlasterOwnerController->GetServerTime() - BlasterOwnerController->GetSingleTripTime()
+				);
+
+		}
+	}
+}
+
+void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& OutHitTargets)
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket == nullptr)
+		return;
+
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector TraceStart = SocketTransform.GetLocation();
+
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector ScatterSphereCenter = TraceStart + ToTargetNormalized * DistanceToScatterSphere;
+
+	for (uint32 i = 0; i < NumberOfpellets; i++)
+	{
+		const FVector RandomScatterVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, ScatterSphereRadius);
+		const FVector EndLocation = ScatterSphereCenter + RandomScatterVector;
+
+		FVector ToEndLocation = EndLocation - TraceStart;
+		ToEndLocation = TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size();
+
+		OutHitTargets.Add(ToEndLocation);
 	}
 }

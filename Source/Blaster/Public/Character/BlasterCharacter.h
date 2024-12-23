@@ -20,6 +20,7 @@ class UBlasterCharacterInputData;
 class AWeapon;
 class UCombatComponent;
 class UBuffComponent;
+class ULagCompensationComponent;
 class ABlasterPlayerState;
 
 class UInputMappingContext;
@@ -29,6 +30,7 @@ class UWidgetComponent;
 class USoundCue;
 class UParticleSystem;
 class UParticleSystemComponent;
+class UBoxComponent;
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairInterface
@@ -47,6 +49,7 @@ public:
 	void PlayFireMontage(bool bIsAiming);
 	void PlayReloadMontage();
 	void PlayEliminatedMontage();
+	void PlaySwapWeaponsMontage();
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastHitReaction();
@@ -104,6 +107,67 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
 	UBlasterCharacterInputData* InputActions;
 
+#pragma region Hitboxes for server side rewind
+	
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* head;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Pelvis;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_02;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_03;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* backpack;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* blanket; // attached to backpack
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* UpperArm_R;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* UpperArm_L;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Hand_R;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Hand_L;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Thigh_R;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Thigh_L;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Foot_R;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Foot_L;
+
+	UPROPERTY()
+	TMap<FName, UBoxComponent*> HitCollisionBoxes;
+
+#pragma endregion
+
 private:
 
 	void PollInit();
@@ -158,6 +222,9 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UBuffComponent* BuffComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	ULagCompensationComponent* LagCompensationComponent;
+
 	float AO_Yaw;
 	float InterpAO_Yaw;
 	float AO_Pitch;
@@ -184,6 +251,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* EliminatedMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SwapWeaponsMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f;
@@ -233,11 +303,14 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
+	bool bFinishedSwappingWeapons = false;
+
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool IsLocallyReloading();
 	FVector GetHitTarget();
 
 	AWeapon* GetEquippedWeapon();
@@ -256,8 +329,14 @@ public:
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
+	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensationComponent; }
 	FORCEINLINE bool GetDisableGameplay() { return bDisableGameplay; }
 
 	FORCEINLINE void AddHealth(float HealAmount) { Health = FMath::Clamp(Health + HealAmount, 0.0f, MaxHealth) ; }
 	FORCEINLINE void AddShield(float ShieldReplenishAmount) { Shield = FMath::Clamp(Shield + ShieldReplenishAmount, 0.f, MaxShield); }
+
+	FORCEINLINE TMap<FName, UBoxComponent*> GetHitCollisionBoxes() { return HitCollisionBoxes; }
+
+	FORCEINLINE bool GetFinishedSwappingWeapons() { return bFinishedSwappingWeapons; }
+	FORCEINLINE void SetFinishedSwappingWeapons(bool Value) { bFinishedSwappingWeapons = Value; }
 };

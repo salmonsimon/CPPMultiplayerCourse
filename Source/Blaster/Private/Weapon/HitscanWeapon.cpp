@@ -4,16 +4,18 @@
 #include "Weapon/HitscanWeapon.h"
 
 #include "Character/BlasterCharacter.h"
+#include "PlayerController/BlasterPlayerController.h"
+#include "BlasterComponents/LagCompensationComponent.h"
 #include "Weapon/WeaponTypes.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 
 #include "DrawDebugHelpers.h"
+
 
 void AHitscanWeapon::Fire(const FVector& HitTarget)
 {
@@ -30,24 +32,45 @@ void AHitscanWeapon::Fire(const FVector& HitTarget)
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		FVector Start = SocketTransform.GetLocation();
 
-
 		FHitResult FireHit;
 		WeaponTraceHit(Start, HitTarget, FireHit);
 		
 		ACharacter* HitCharacter = Cast<ACharacter>(FireHit.GetActor());
 
 		if (HitCharacter && 
-			HitCharacter != Cast<ACharacter>(OwnerPawn) &&
-			HasAuthority() && 
+			HitCharacter != Cast<ACharacter>(OwnerPawn) && 
 			InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(
-				HitCharacter,
-				Damage,
-				InstigatorController,
-				this,
-				UDamageType::StaticClass()
-			);
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+
+			if (HasAuthority() && bCauseAuthDamage)
+			{
+				UGameplayStatics::ApplyDamage(
+					HitCharacter,
+					Damage,
+					InstigatorController,
+					this,
+					UDamageType::StaticClass()
+				);
+			}
+			else if (!HasAuthority() && bUseServerSideRewind)
+			{
+				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
+				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
+
+				ABlasterCharacter* HitBlasterCharacter = Cast<ABlasterCharacter>(HitCharacter);
+
+				if (BlasterOwnerController && HitBlasterCharacter && BlasterOwnerCharacter && BlasterOwnerCharacter->GetLagCompensationComponent() && BlasterOwnerCharacter->IsLocallyControlled())
+				{
+					BlasterOwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(
+						HitBlasterCharacter,
+						Start,
+						HitTarget,
+						BlasterOwnerController->GetServerTime() - BlasterOwnerController->GetSingleTripTime(),
+						this
+					);
+				}
+			}
 		}
 
 		if (ImpactParticles)
@@ -89,30 +112,12 @@ void AHitscanWeapon::Fire(const FVector& HitTarget)
 	}
 }
 
-FVector AHitscanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
-{
-	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
-	FVector ScatterSphereCenter = TraceStart + ToTargetNormalized * DistanceToScatterSphere;
-
-	FVector RandomScatterVector = UKismetMathLibrary::RandomUnitVector() * FMath::RandRange(0.f, ScatterSphereRadius);
-	FVector EndLocation = ScatterSphereCenter + RandomScatterVector;
-	FVector ToEndLocation = EndLocation - TraceStart;
-
-	/*
-	DrawDebugSphere(GetWorld(), ScatterSphereCenter, ScatterSphereRadius, 18, FColor::Red, true);
-	DrawDebugSphere(GetWorld(), EndLocation, 4.f, 18, FColor::Orange, true);
-	DrawDebugLine(GetWorld(), TraceStart, TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size(), FColor::Cyan, true);
-	*/
-
-	return FVector(TraceStart + ToEndLocation * TRACE_LENGTH / ToEndLocation.Size());
-}
-
 void AHitscanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult & OutHit)
 {
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		FVector TraceEnd = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+		FVector TraceEnd = TraceStart + (HitTarget - TraceStart) * 1.25f;
 
 		World->LineTraceSingleByChannel(
 			OutHit,
@@ -125,6 +130,8 @@ void AHitscanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 
 		if (OutHit.bBlockingHit)
 			BeamEnd = OutHit.ImpactPoint;
+
+		DrawDebugSphere(GetWorld(), BeamEnd, 16.f, 12, FColor::Orange, true);
 
 		if (BeamParticles)
 		{

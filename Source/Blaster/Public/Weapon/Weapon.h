@@ -32,6 +32,16 @@ enum class EWeaponState : uint8
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Hitscan UMETA(DisplayName = "Hitscan Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -53,6 +63,10 @@ public:
 	void AddAmmo(int32 AmmoToAdd);
 
 	void EnableCustomDepth(bool bEnable);
+
+	FVector TraceEndWithScatter(const FVector& HitTarget);
+
+	bool IsFull();
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairCenter;
@@ -97,8 +111,32 @@ protected:
 		int32 OtherBodyIndex
 	);
 
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
+
+	UPROPERTY()
+	ABlasterCharacter* BlasterOwnerCharacter;
+
+	UPROPERTY()
+	ABlasterPlayerController* BlasterOwnerController;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
+	float Damage = 20.f;
+
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	UAnimationAsset* FireAnimation;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter")
+	bool bUseScatter = false;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter", Meta = (EditCondition = "bUseScatter"))
+	float DistanceToScatterSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter", Meta = (EditCondition = "bUseScatter"))
+	float ScatterSphereRadius = 75.f;
+
+	UPROPERTY(Replicated, EditAnywhere, Category = "Weapon|Main Configuration")
+	bool bUseServerSideRewind = false;
 
 private:
 
@@ -106,10 +144,16 @@ private:
 	void OnRep_WeaponState();
 
 	UFUNCTION()
-	void OnRep_Ammo();
-
-	UFUNCTION()
 	void SpendRound();
+
+	UFUNCTION(Client, Reliable)
+	void Client_UpdateCurrentAmmo(int32 ServerCurrentAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void Client_AddAmmo(int32 AmmoToAdd);
+
+	// Number of unprocessed server requests for CurrentAmmo
+	int32 AmmoRequestSequence = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon|Main Configuration")
 	USkeletalMeshComponent* WeaponMesh;
@@ -138,26 +182,22 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	bool bIsAutomaticWeapon = true;
 	
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, Category = "Weapon|Combat")
+	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	int32 CurrentAmmo;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
 	int32 MagazineCapacity;
 
-	UPROPERTY()
-	ABlasterCharacter* BlasterOwnerCharacter;
-
-	UPROPERTY()
-	ABlasterPlayerController* BlasterOwnerController;
-
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	EWeaponType WeaponType;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
+	EFireType FireType;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Main Configuration")
 	USoundCue* EquipSound;
 
 	bool bDestroyOnElimination = false;
-		
 
 public:
 	void SetWeaponState(EWeaponState State);
@@ -170,10 +210,14 @@ public:
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 	FORCEINLINE	bool GetIsAutomaticWeapon() const { return bIsAutomaticWeapon; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE EFireType GetFireType() const { return FireType; }
 	FORCEINLINE int32 GetCurrentAmmo() const { return CurrentAmmo; }
 	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
 	FORCEINLINE USoundCue* GetEquipSound() { return EquipSound; }
 	FORCEINLINE bool GetDestroyOnElimination() { return bDestroyOnElimination; }
 	FORCEINLINE void SetDestroyOnElimination(bool Value) { bDestroyOnElimination = Value; }
+	FORCEINLINE bool GetUseScatter() const { return bUseScatter; }
+	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE bool GetUseServerSideRewind() const { return bUseServerSideRewind; }
 
 };

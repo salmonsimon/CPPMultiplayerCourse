@@ -20,11 +20,7 @@ public:
 
 protected:
 
-	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult & OutHit);
-
-	UPROPERTY(EditAnywhere, Category = "Weapon|Combat")
-	float Damage = 20.f;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Effects")
 	UParticleSystem* ImpactParticles;
@@ -42,15 +38,5 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon|Effects", Meta = (EditCondition = "FireAnimation==nullptr", EditConditionHides))
 	USoundCue* FireSound;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter")
-	bool bUseScatter = false;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter", Meta = (EditCondition = "bUseScatter"))
-	float DistanceToScatterSphere = 800.f;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon|Weapon Scatter", Meta = (EditCondition = "bUseScatter"))
-	float ScatterSphereRadius = 75.f;
-
 	
 };

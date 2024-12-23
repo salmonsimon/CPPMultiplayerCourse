@@ -8,6 +8,8 @@
 
 #include "BlasterPlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
+
 class ABlasterHUD;
 class UCharacterOverlay;
 class ABlasterGameMode;
@@ -39,6 +41,8 @@ public:
 
 	virtual float GetServerTime();
 
+	FHighPingDelegate HighPingDelegate;
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -59,6 +63,10 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float Starting);
 
+	void CheckPing();
+	void HighPingWarning();
+	void StopHighPingWarning();
+
 private:
 
 	void SyncClientServerTimes();
@@ -68,6 +76,9 @@ private:
 
 	void HandleMatchHasStarted();
 	void HandleCooldown();
+
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHighPing);
 
 	UPROPERTY()
 	ABlasterGameMode* BlasterGameMode;
@@ -109,5 +120,24 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
 	FName MatchState;
+
+	FTimerHandle HighPingTimerHandle;
+	FTimerHandle HighPingWarningStopTimerHandle;
+
+	UPROPERTY(EditAnywhere)
+	float HighPingWarningDuration = 5.f;
+
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 50.f;
+
+	UPROPERTY()
+	float SingleTripTime = 0.f;
+
+public:
+
+	FORCEINLINE float GetSingleTripTime() const { return SingleTripTime; }
 
 };

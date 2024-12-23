@@ -34,16 +34,35 @@ public:
 	void FireButtonPressed(bool bPressed);
 
 	void Fire();
+	void FireProjectile();
+	void FireHitscan();
+	void FireShotgun();
+
+	void LocalFire(const FVector_NetQuantize& TraceHitResult);
+	void ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitResults);
+
 	void Reload();
 
 	UFUNCTION(BlueprintCallable)
 	void FinishedReloading();
 
-	UFUNCTION(Server, Reliable)
-	void Server_Fire(const FVector_NetQuantize& TraceHitResult);
+	UFUNCTION(BlueprintCallable)
+	void FinishedSwappingWeapons();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishedSwappingAttachedWeapons();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Fire(const FVector_NetQuantize& TraceHitResult, float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Fire(const FVector_NetQuantize& TraceHitResult);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ShotgunFire(const TArray<FVector_NetQuantize>& TraceHitResults, float FireDelay);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ShotgunFire(const TArray<FVector_NetQuantize>& TraceHitResults);
 
 	UFUNCTION(Server, Reliable)
 	void Server_Reload();
@@ -82,6 +101,9 @@ private:
 	void InitializeCarriedAmmo();
 
 	UFUNCTION()
+	void OnRep_Aiming();
+
+	UFUNCTION()
 	void OnRep_CarriedAmmo();
 
 	UFUNCTION()
@@ -107,8 +129,10 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
 
-	UPROPERTY(Replicated)
-	bool bIsAiming;
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
+	bool bIsAiming = false;
+
+	bool bAimButtonPressed = false;
 
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed = 750.f;
@@ -172,6 +196,8 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
+	bool bIsLocallyReloading = false;
+
 public:
 	FORCEINLINE void SetOwningCharacter(ABlasterCharacter* OwningCharacter) { Character = OwningCharacter; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() { return EquippedWeapon; }
@@ -179,8 +205,10 @@ public:
 	FORCEINLINE FVector GetHitTarget() { return HitTarget; }
 	FORCEINLINE bool IsAiming() { return bIsAiming; }
 	FORCEINLINE ECombatState GetCombatState() { return CombatState; }
+	FORCEINLINE void SetCombatState(ECombatState NewCombatState) { CombatState = NewCombatState; }
 	FORCEINLINE int32 GetCarriedAmmo() { return CarriedAmmo; }
 	FORCEINLINE int32 GetWeaponAmmo() { return EquippedWeapon->GetCurrentAmmo(); }
+	FORCEINLINE bool GetIsLocallyReloading() { return bIsLocallyReloading; }
 
 	void SetIsAiming(bool IsAiming);
 	bool ShouldSwapWeapon();
