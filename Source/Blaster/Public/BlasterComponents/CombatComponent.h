@@ -52,14 +52,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishedSwappingAttachedWeapons();
 
-	UFUNCTION(Server, Reliable)
-	void Server_Fire(const FVector_NetQuantize& TraceHitResult);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Fire(const FVector_NetQuantize& TraceHitResult, float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Fire(const FVector_NetQuantize& TraceHitResult);
 
-	UFUNCTION(Server, Reliable)
-	void Server_ShotgunFire(const TArray<FVector_NetQuantize>& TraceHitResults);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ShotgunFire(const TArray<FVector_NetQuantize>& TraceHitResults, float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ShotgunFire(const TArray<FVector_NetQuantize>& TraceHitResults);
