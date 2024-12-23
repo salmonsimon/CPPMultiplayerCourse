@@ -264,7 +264,7 @@ void UCombatComponent::FireProjectile()
 		if (!Character->HasAuthority())
 			LocalFire(HitTarget);
 
-		Server_Fire(HitTarget);
+		Server_Fire(HitTarget, EquippedWeapon->GetFireDelay());
 	}
 	
 }
@@ -278,7 +278,7 @@ void UCombatComponent::FireHitscan()
 		if (!Character->HasAuthority())
 			LocalFire(HitTarget);
 
-		Server_Fire(HitTarget);
+		Server_Fire(HitTarget, EquippedWeapon->GetFireDelay());
 	}
 }
 
@@ -294,7 +294,7 @@ void UCombatComponent::FireShotgun()
 		if (!Character->HasAuthority())
 			ShotgunLocalFire(HitTargets);
 
-		Server_ShotgunFire(HitTargets);
+		Server_ShotgunFire(HitTargets, EquippedWeapon->GetFireDelay());
 	}
 }
 
