@@ -149,13 +149,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(FFramePackage& Pac
 
 		if (ConfirmHitResult.bBlockingHit)
 		{
-			if (ConfirmHitResult.Component.IsValid())
-			{
-				UBoxComponent* DebugBox = Cast<UBoxComponent>(ConfirmHitResult.Component);
-				if (DebugBox)
-					DrawDebugBox(World, DebugBox->GetComponentLocation(), DebugBox->GetScaledBoxExtent(), FQuat(DebugBox->GetComponentRotation()), FColor::Red, false, 10.f);
-			}
-
 			MoveHitBoxes(HitCharacter, CurrentFrame, true);
 			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 
@@ -180,13 +173,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(FFramePackage& Pac
 
 				if (ConfirmHitResult.bBlockingHit)
 				{
-					if (ConfirmHitResult.Component.IsValid())
-					{
-						UBoxComponent* DebugBox = Cast<UBoxComponent>(ConfirmHitResult.Component);
-						if (DebugBox)
-							DrawDebugBox(World, DebugBox->GetComponentLocation(), DebugBox->GetScaledBoxExtent(), FQuat(DebugBox->GetComponentRotation()), FColor::Blue, false, 10.f);
-					}
-
 					MoveHitBoxes(HitCharacter, CurrentFrame, true);
 					EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 
@@ -230,20 +216,11 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(FFramePa
 	PathParams.SimFrequency = 15.f;
 	PathParams.ProjectileRadius = 5.f;
 	PathParams.TraceChannel = ECC_HitBox;
-	PathParams.DrawDebugTime = 5.f;
-	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
 
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 
 	if (PathResult.HitResult.bBlockingHit)
 	{
-		if (PathResult.HitResult.Component.IsValid())
-		{
-			UBoxComponent* DebugBox = Cast<UBoxComponent>(PathResult.HitResult.Component);
-			if (DebugBox)
-				DrawDebugBox(GetWorld(), DebugBox->GetComponentLocation(), DebugBox->GetScaledBoxExtent(), FQuat(DebugBox->GetComponentRotation()), FColor::Red, false, 10.f);
-		}
-
 		MoveHitBoxes(HitCharacter, CurrentFrame, true);
 		EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 
@@ -262,13 +239,6 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(FFramePa
 			UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 			if (PathResult.HitResult.bBlockingHit)
 			{
-				if (PathResult.HitResult.Component.IsValid())
-				{
-					UBoxComponent* DebugBox = Cast<UBoxComponent>(PathResult.HitResult.Component);
-					if (DebugBox)
-						DrawDebugBox(GetWorld(), DebugBox->GetComponentLocation(), DebugBox->GetScaledBoxExtent(), FQuat(DebugBox->GetComponentRotation()), FColor::Blue, false, 10.f);
-				}
-
 				MoveHitBoxes(HitCharacter, CurrentFrame, true);
 				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 
@@ -330,13 +300,6 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 			ABlasterCharacter* HitBlasterCharacter = Cast<ABlasterCharacter>(ConfirmHeadshotHitResult.GetActor());
 			if (HitBlasterCharacter)
 			{
-				if (ConfirmHeadshotHitResult.Component.IsValid())
-				{
-					UBoxComponent* DebugBox = Cast<UBoxComponent>(ConfirmHeadshotHitResult.Component);
-					if (DebugBox)
-						DrawDebugBox(World, DebugBox->GetComponentLocation(), DebugBox->GetScaledBoxExtent(), FQuat(DebugBox->GetComponentRotation()), FColor::Red, false, 10.f);
-				}
-
 				if (ShotgunResult.HeadShots.Contains(HitBlasterCharacter))
 					ShotgunResult.HeadShots[HitBlasterCharacter]++;
 				else
@@ -378,13 +341,6 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 			ABlasterCharacter* HitBlasterCharacter = Cast<ABlasterCharacter>(ConfirmBodyHitResult.GetActor());
 			if (HitBlasterCharacter)
 			{
-				if (ConfirmBodyHitResult.Component.IsValid())
-				{
-					UBoxComponent* DebugBox = Cast<UBoxComponent>(ConfirmBodyHitResult.Component);
-					if (DebugBox)
-						DrawDebugBox(World, DebugBox->GetComponentLocation(), DebugBox->GetScaledBoxExtent(), FQuat(DebugBox->GetComponentRotation()), FColor::Blue, false, 10.f);
-				}
-
 				if (ShotgunResult.BodyShots.Contains(HitBlasterCharacter))
 					ShotgunResult.BodyShots[HitBlasterCharacter]++;
 				else

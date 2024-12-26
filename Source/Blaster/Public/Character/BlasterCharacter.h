@@ -31,6 +31,8 @@ class USoundCue;
 class UParticleSystem;
 class UParticleSystemComponent;
 class UBoxComponent;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
@@ -76,6 +78,12 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_LeaveGame();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_GainedTheLead();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_LostTheLead();
 
 	FOnLeftGame OnLeftGame;
 
@@ -313,6 +321,12 @@ private:
 	bool bFinishedSwappingWeapons = false;
 
 	bool bLeftGame = false;
+
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* CrownSystem;
+
+	UPROPERTY()
+	UNiagaraComponent* CrownComponent;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);

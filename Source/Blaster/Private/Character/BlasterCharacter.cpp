@@ -12,6 +12,7 @@
 #include "Input/BlasterCharacterInputData.h"
 #include "GameModes/BlasterGameMode.h"
 #include "PlayerState/BlasterPlayerState.h"
+#include "GameStates/BlasterGameState.h"
 #include "Weapon/WeaponTypes.h"
 #include "Enums/CombatState.h"
 
@@ -34,6 +35,8 @@
 #include "Sound/SoundCue.h"
 #include "TimerManager.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -249,6 +252,11 @@ void ABlasterCharacter::PollInit()
         {
             BlasterPlayerState->AddToScore(0.f);
             BlasterPlayerState->AddToDefeats(0);
+
+            ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+
+            if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
+                Multicast_GainedTheLead();
         }
     }
 }
@@ -433,6 +441,9 @@ void ABlasterCharacter::Multicast_Eliminated_Implementation(bool bPlayerLeftGame
     if (bHideSniperScope)
         ShowSniperScopeWidget(false);
 
+    if (CrownComponent)
+        CrownComponent->DestroyComponent();
+
     GetWorldTimerManager().SetTimer(
         EliminatedTimer,
         this,
@@ -506,6 +517,34 @@ void ABlasterCharacter::UpdateHUDAmmo()
         BlasterPlayerController->SetHUDCarriedAmmo(CombatComponent->GetCarriedAmmo());
         BlasterPlayerController->SetHUDWeaponAmmo(CombatComponent->GetWeaponAmmo());
     }
+}
+
+void ABlasterCharacter::Multicast_GainedTheLead_Implementation()
+{
+    if (CrownSystem == nullptr)
+        return;
+
+    if (CrownComponent == nullptr)
+    {
+        CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+            CrownSystem,
+            GetCapsuleComponent(),
+            FName(),
+            GetActorLocation() + FVector(0.f, 0.f, 110.f),
+            GetActorRotation(),
+            EAttachLocation::KeepWorldPosition,
+            false
+        );
+    }
+
+    if (CrownComponent)
+        CrownComponent->Activate();
+}
+
+void ABlasterCharacter::Multicast_LostTheLead_Implementation()
+{
+    if (CrownComponent)
+        CrownComponent->DestroyComponent();
 }
 
 void ABlasterCharacter::Server_LeaveGame_Implementation()
